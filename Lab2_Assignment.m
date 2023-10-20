@@ -1,5 +1,7 @@
 classdef Lab2_Assignment < handle
-
+    properties
+        r
+    end
    methods
        function self = Lab2_Assignment()
            clf
@@ -10,9 +12,27 @@ classdef Lab2_Assignment < handle
    end
 
    %% Defined positions of Groceries
+   methods
+       function self = clawAttach(self, X, Y, Z)
+           baseTr = transl(X, Y, Z);
+           self.r = LinearUR10(baseTr);
+           hold on;
+           Claw1 = TheClaww();
+           Claw2 = TheClaww();
+
+           q = [0,0,0,0,0,0,0];
+           Claw1.model.base = self.r.model.fkine(q).T * transl(0,0,0.09);
+           Claw1.model.animate(q);
+           drawnow;
+           Claw2.model.base = self.r.model.fkine(q).T * trotz(pi) * transl(0,0,0.09);
+           Claw2.model.animate(q);
+           drawnow;
+           input("Press ENTER to finish.")
+       end
+   end
    methods (Static)
        function objectLocater()
-          ur10 = LinearUR10;
+          self.r = LinearUR10;
           q = [0, 0, 0, 0, 0, 0, 0];
 
           endPos = [-0.9, 0.4, 0.50;
@@ -30,63 +50,46 @@ classdef Lab2_Assignment < handle
            for i = 1:size(endPos, 1)
                endPosition = endPos(i, :);
                hold = pickUps(i, :);
-               Lab2_Assignment.robotRotato(endPosition, hold, ur10);
+               Lab2_Assignment.robotRotato(endPosition, hold, self.r);
            end
            input('Press enter to end operation');
        end
 
-       function clawAttach(X, Y, Z)
-           baseTr = transl(X, Y, Z);
-           ur10 = LinearUR10(baseTr);
-           hold on;
-           Claw1 = TheClaww();
-           Claw2 = TheClaww();
-
-           q = [0,0,0,0,0,0,0];
-           Claw1.model.base = ur10.model.fkine(q).T * transl(0,0,0.09);
-           Claw1.model.animate(q);
-           drawnow;
-           Claw2.model.base = ur10.model.fkine(q).T * trotz(pi) * transl(0,0,0.09);
-           Claw2.model.animate(q);
-           drawnow;
-           input("Press ENTER to finish.")
-       end
-
-       function robotRotato(endPosition, hold, ur10)
+       function robotRotato(endPosition, hold, r)
           numSteps = 100;
 
           endTransform = transl(hold) * trotx(pi);
           elbowAngles = deg2rad([0, 0, 45, 70, -35, 259, 0]);
-          qEnd = ur10.model.ikcon(endTransform, elbowAngles);
+          qEnd = self.r.model.ikcon(endTransform, elbowAngles);
 
           for numBricks = 1:1
-              qCurrent = ur10.model.getpos();
+              qCurrent = self.r.model.getpos();
               plotTraj = jtraj(qCurrent, qEnd, numSteps);
 
               for i = 1:min(size(plotTraj, 1), numSteps)
-                  ur10.model.animate(plotTraj(i, :));
+                  self.r.model.animate(plotTraj(i, :));
 
                   %% Claw
                     
-                  endEffectorTransform = ur10.model.fkine(plotTraj(i, :)).T;
+                  endEffectorTransform = self.r.model.fkine(plotTraj(i, :)).T;
                   Claw1.model.base = endEffectorTransform;
                   %Claw1.model.animate([0, 0]);
                   position = plotTraj(i,:);
-                  endEffector = ur10.model.fkine(position).T;
+                  endEffector = self.r.model.fkine(position).T;
                   Claw1.model.base = endEffector * trotx(pi/2);
                   %Claw1.model.animate([0, 0]);
                   pause(0.01);
               end
 
-              qCurrent = ur10.model.getpos();
+              qCurrent = self.r.model.getpos();
               endTransform = transl(endPosition) * trotx(pi);
               elbowEndAngles = deg2rad([0, 0, 45, 70, -35, 259, 0]);
-              BrickEnd = ur10.model.ikcon(endTransform, elbowEndAngles);
+              BrickEnd = self.r.model.ikcon(endTransform, elbowEndAngles);
               plotTrajEnd = jtraj(qCurrent, BrickEnd, numSteps);
 
               for i = 1:numSteps
-                  currentTransform = ur10.model.fkine(plotTrajEnd(i, :)).T;
-                  ur10.model.animate(plotTrajEnd(i, :));
+                  currentTransform = self.r.model.fkine(plotTrajEnd(i, :)).T;
+                  self.r.model.animate(plotTrajEnd(i, :));
                   pause(0.01);
               end
           end
