@@ -12,7 +12,7 @@ classdef Lab2_Assignment < handle
    %% Defined positions of Groceries
    methods (Static)
        function objectLocater()
-          robot1 = LinearUR10;
+          ur10 = LinearUR10;
           q = [0, 0, 0, 0, 0, 0, 0];
 
           endPos = [-0.9, 0.4, 0.50;
@@ -30,63 +30,63 @@ classdef Lab2_Assignment < handle
            for i = 1:size(endPos, 1)
                endPosition = endPos(i, :);
                hold = pickUps(i, :);
-               Lab2_Assignment.robotRotato(endPosition, hold, robot1);
+               Lab2_Assignment.robotRotato(endPosition, hold, ur10);
            end
            input('Press enter to end operation');
        end
 
        function clawAttach(X, Y, Z)
            baseTr = transl(X, Y, Z);
-           robot1 = LinearUR10(baseTr);
+           ur10 = LinearUR10(baseTr);
            hold on;
            Claw1 = TheClaww();
            Claw2 = TheClaww();
 
            q = [0,0,0,0,0,0,0];
-           Claw1.model.base = robot1.model.fkine(q).T * transl(0,0,0.09);
+           Claw1.model.base = ur10.model.fkine(q).T * transl(0,0,0.09);
            Claw1.model.animate(q);
            drawnow;
-           Claw2.model.base = robot1.model.fkine(q).T * trotz(pi) * transl(0,0,0.09);
+           Claw2.model.base = ur10.model.fkine(q).T * trotz(pi) * transl(0,0,0.09);
            Claw2.model.animate(q);
            drawnow;
            input("Press ENTER to finish.")
        end
 
-       function robotRotato(endPosition, hold, robot1)
+       function robotRotato(endPosition, hold, ur10)
           numSteps = 100;
 
           endTransform = transl(hold) * trotx(pi);
           elbowAngles = deg2rad([0, 0, 45, 70, -35, 259, 0]);
-          qEnd = robot1.model.ikcon(endTransform, elbowAngles);
+          qEnd = ur10.model.ikcon(endTransform, elbowAngles);
 
           for numBricks = 1:1
-              qCurrent = robot1.model.getpos();
+              qCurrent = ur10.model.getpos();
               plotTraj = jtraj(qCurrent, qEnd, numSteps);
 
               for i = 1:min(size(plotTraj, 1), numSteps)
-                  robot1.model.animate(plotTraj(i, :));
+                  ur10.model.animate(plotTraj(i, :));
 
                   %% Claw
                     
-                  endEffectorTransform = robot1.model.fkine(plotTraj(i, :)).T;
+                  endEffectorTransform = ur10.model.fkine(plotTraj(i, :)).T;
                   Claw1.model.base = endEffectorTransform;
                   %Claw1.model.animate([0, 0]);
                   position = plotTraj(i,:);
-                  endEffector = robot1.model.fkine(position).T;
+                  endEffector = ur10.model.fkine(position).T;
                   Claw1.model.base = endEffector * trotx(pi/2);
                   %Claw1.model.animate([0, 0]);
                   pause(0.01);
               end
 
-              qCurrent = robot1.model.getpos();
+              qCurrent = ur10.model.getpos();
               endTransform = transl(endPosition) * trotx(pi);
               elbowEndAngles = deg2rad([0, 0, 45, 70, -35, 259, 0]);
-              BrickEnd = robot1.model.ikcon(endTransform, elbowEndAngles);
+              BrickEnd = ur10.model.ikcon(endTransform, elbowEndAngles);
               plotTrajEnd = jtraj(qCurrent, BrickEnd, numSteps);
 
               for i = 1:numSteps
-                  currentTransform = robot1.model.fkine(plotTrajEnd(i, :)).T;
-                  robot1.model.animate(plotTrajEnd(i, :));
+                  currentTransform = ur10.model.fkine(plotTrajEnd(i, :)).T;
+                  ur10.model.animate(plotTrajEnd(i, :));
                   pause(0.01);
               end
           end
@@ -110,6 +110,3 @@ classdef Lab2_Assignment < handle
        %}
    
 end
-
-
-          
