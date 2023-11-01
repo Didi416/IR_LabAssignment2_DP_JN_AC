@@ -1,0 +1,213 @@
+classdef RMRC_Lab2 < handle
+
+    properties
+        robot1 % Instance of the first robot
+        robot2 % Instance of the second robot
+    end
+
+    %% Constructor
+    methods
+        function self = RMRC_Lab2
+            clc;
+            clf;
+            self.Environment_Lab2();
+            self.initialiseRobots();
+            %input('Order has been confirmed');
+            self.objectLocater();
+        end
+    end
+
+    methods
+        function initialiseRobots(self)
+            % Initialise robot instances
+            self.robot1 = LinearUR10; % Make sure LinearUR10 is defined elsewhere
+            self.robot2 = Robo; % Make sure Robo is defined elsewhere
+        end
+
+        function Environment_Lab2(self)
+            % Set up the environment
+            surf([-2,-2; 2,2], [-2,2;-2,2], [0.0,0.0;0.0,0.0], ...
+                'CData', imread('floor.jpg'), 'FaceColor', 'texturemap');
+            hold on;
+
+            surf([-2,-2;-2,-2], [-2,-2;2,2], [0.01,2.2;0.01,2.2], ...
+                'CData', imrotate(imread('window1.jpg'), -90),'FaceColor','texturemap');
+            hold on;
+
+            surf([-2,-2;2,2],[2,2;2,2],[0.01,2.2;0.01,2.2], ...
+                'CData', imrotate(imread('window2.jpg'), -90),'FaceColor','texturemap');
+            hold on;
+
+            axis([-2 2 -2 2 0 2.2]);
+            grid on;
+            xlabel('X');
+            ylabel('Y');
+            zlabel('Z');
+            axis equal;
+
+            % Add additional environment setup as needed
+            PlaceObject('kitchen2.ply', [-2.8, 5, 0.01]);
+            PlaceObject('fireExtinguisher.ply', [1.1, 1.7, 0]);
+            PlaceObject('emergencyStopButton.ply', [0.3, -0.3, 0.7]);
+            hold on; % End of environment setup
+        end
+
+        function objectLocater(self)
+            % inital placements of boxes
+            boxPos = zeros(12,3);
+            boxes = cell(1,12);
+            verticesArray = zeros(24,3,6);
+            x = -1.4;
+            i = 1;
+
+            for y = -0.2:0.6:1.0
+                for z = 0.2:0.28:0.48
+                    boxes{i} = PlaceObject('box.ply');
+                    vertices = get(boxes{i}, 'Vertices');
+                    transformedVertices = [vertices,ones(size(vertices,1),1)] * transl(x,y,z)';
+                    set(boxes{i}, 'Vertices', transformedVertices(:,1:3));
+                    verticesArray(:,:,i) = vertices;
+                    boxPos(i,1) = x;
+                    boxPos(i,2) = y;
+                    boxPos(i,3) = z;
+                    i = i+1;
+                end
+                for z = 1.0:0.28:1.28
+                    boxes{i} = PlaceObject('box.ply');
+                    vertices = get(boxes{i}, 'Vertices');
+                    transformedVertices = [vertices,ones(size(vertices,1),1)] * transl(x,y,z)';
+                    set(boxes{i}, 'Vertices', transformedVertices(:,1:3));
+                    verticesArray(:,:,i) = vertices;
+                    boxPos(i,1) = x;
+                    boxPos(i,2) = y;
+                    boxPos(i,3) = z;
+                    i = i+1;
+                end
+            end
+            
+            % This function defines positions and initiates robot movement
+            
+            box1 = [-1.4, -0.2, 1.29]; % top shelf
+            box2 = [-1.4, 0.45, 1.29];
+            box3 = [ -1.4, 1.0, 1.29];
+
+            box4 = [-1.4, -0.2, 1.0];
+            box5 = [-1.4, 0.45, 1.0];
+            box6 = [-1.4, 1.0, 1.0];
+      
+            BoxPickUp = [box1; box2; box3; box4; box5; box6];
+
+            %%
+            % UR10 pick up positions from cupboards
+            pickUps1 = [-1.4, -0.2, 1.29; 
+                        -1.4, -0.2, 1.0;
+                        -1.4, 1.0, 1.0;
+                        -1.35, -0.2, 0.47;
+                        -1.35, 1.0, 0.47;
+                        -1.35, 0.45, 0.2];
+
+            
+            % UR10 drop positions to the robot 2 on table
+            endPos1 = [-0.5, 1.5, 1.2;
+                       -0.5, 1.5, 1.2;
+                       -0.5, 1.5, 1.2;
+                       -0.5, 1.5, 1.2;
+                       -0.5, 1.5, 1.2;
+                       -0.5, 1.5, 1.2];
+            
+            %% Moving robot 1 loop with RMRC
+            for i = 1:size(BoxPickUp, 1)
+                numSteps = 100;
+
+                % Calculate start and end pose for the RMRC
+                startPose = self.robot1.model.fkine(self.robot1.model.getpos())
+                endPose = transl(BoxPickUp(i,:)) * trotx(pi);
+                
+                % Call the RMRC function instead of using ikcon
+                self.RMRC(startPose, endPose, numSteps); % Example: 100 steps
+                
+                % Here you would include any necessary operations such as gripping the object.
+                
+                % Then move the object to the drop-off position
+                startPose = endPose; % The current endPose is now the new startPose
+                endPose = transl(endPos1(i,:)) * trotx(pi); % Assuming endPos1 is the drop-off pose
+                self.RMRC(startPose, endPose, numSteps); % Move to drop-off position
+                
+                % Here you would include any operations for releasing the object.
+            end
+            
+            input('Press enter to end operation');
+        end
+
+        function RMRC(self, startPose, endPose, numSteps)
+            numSteps = 100;
+
+            % Resolved Motion Rate Control Function
+            deltaT = 0.1; % Time step
+            epsilon = 1e-6; % Threshold for avoiding singularity
+
+            % Convert matrices to SE3 objects 
+            if ~isa(startPose, 'SE3')
+                startPose = SE3(startPose);
+            end
+            if ~isa(endPose, 'SE3')
+                endPose = SE3(endPose);
+            end
+            
+
+            % Calculate the trajectory to follow in task space
+            traj = ctraj(startPose, endPose, numSteps);
+
+            for i = 1:numSteps
+                T = traj(:,:,i); % Extract the desired end-effector pose at this step
+                q = self.robot1.model.getpos(); % Get current joint configuration
+                
+                %{
+                % Calculate the desired end-effector velocity to move toward the next pose
+                deltaT = T - self.robot1.model.fkine(q);
+                v = transl(deltaT) / deltaT; % Linear velocity
+                w = tr2delta(self.robot1.model.fkine(q), T) / deltaT; % Angular velocity
+                xd = [v;w]; % Desired end-effector velocity
+                %}
+
+                % Calculate
+                currentPose = self.robot1.model.fkine(q);  % Convert to a homogeneous transformation matrix
+                desiredPose = T;                          % Convert to a homogeneous transformation matrix
+
+                % Calculate the differential motion required
+                %[v, w] = tr2delta(currentPose, desiredPose); % v is the translational velocity and w is the rotational velocity
+                %xd = [v; w]; % Combine into the desired end-effector velocity
+                delta = tr2delta(double(currentPose), double(desiredPose)); % suppose to be a 6x1 vector
+                xd = delta / deltaT; % Desired end-effector velocity
+                
+                % Calculate the Jacobian for the current joint configuration
+                J = self.robot1.model.jacob0(q);
+
+                % Avoid singularity by adding damping if necessary
+                if det(J'*J) < epsilon
+                    lambda = 0.1; % Damping coefficient
+                    J_damped = J' * inv(J*J' + lambda^2 * eye(6));
+                else
+                    J_damped = pinv(J); % Use the pseudoinverse of the Jacobian
+                end
+                
+                % Calculate joint velocities
+                qd = J_damped * xd;
+                
+                % Integrate joint velocities to get to the next joint state
+                q_next = q + qd' * deltaT;
+                
+                % Animate the robot motion
+                self.robot1.model.animate(q_next);
+                
+                % Update any visuals in the simulation
+                drawnow();
+                
+                % pause to control the simulation speed
+                pause(deltaT);
+            end
+        end
+
+
+    end
+end
