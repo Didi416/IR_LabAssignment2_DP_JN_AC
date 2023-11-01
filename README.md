@@ -9,4 +9,8 @@ Two robot envrionment that stocks and retrieves items from shelves (most likely 
 A couple changes were made to the files in the RVC Toolbox for our files to work as intended. These include:
 - adding 'nowrist' to 'self.model.plot3d(self.homeQ,'noarrow','workspace',self.workspace,'view',[ax,by],'notiles') line (203) in RobotBaseClass, to be able to view the gripper working properly and to not have too many axes in the simulation. (Aesthetic and presentation purposes, not explicitly necessary for the program to work.)
 - LinearUR10 robot file changes:
-  -- Ensure base rotation is as follows (line 16): 'self.model.base = self.model.base.T * baseTr * trotx(pi/2);'
+  - Ensure base rotation is as follows (line 16): 'self.model.base = self.model.base.T * baseTr * trotx(pi/2);'
+
+- Add Robot Model Files to directory: \PeterCorkesRoboticsToolbox_Modified\rvctools\robot\UTS\RobotModels
+  - @TheClaww
+  - @Robo
