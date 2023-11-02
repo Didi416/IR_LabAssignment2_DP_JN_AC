@@ -1,0 +1,598 @@
+classdef Lab2_GUI < matlab.apps.AppBase
+
+    % Properties that correspond to app components
+    properties (Access = public)
+        UIFigure                     matlab.ui.Figure
+        TabGroup                     matlab.ui.container.TabGroup
+        HomeTab                      matlab.ui.container.Tab
+        TextArea_2                   matlab.ui.control.TextArea
+        Image11                      matlab.ui.control.Image
+        Image10                      matlab.ui.control.Image
+        Image9                       matlab.ui.control.Image
+        WhatsinstockButton           matlab.ui.control.Button
+        Label                        matlab.ui.control.Label
+        StartheretogettheShelfElfbottoprepareyoureverydaymealLabel  matlab.ui.control.Label
+        GETSTARTEDButton             matlab.ui.control.StateButton
+        EstopSwitch                  matlab.ui.control.Switch
+        EstopSwitchLabel             matlab.ui.control.Label
+        SeeallMealsButton            matlab.ui.control.Button
+        MyprofileButton              matlab.ui.control.Button
+        Image13                      matlab.ui.control.Image
+        OrderTab                     matlab.ui.container.Tab
+        HomePageButton               matlab.ui.control.StateButton
+        GalleryButton_2              matlab.ui.control.StateButton
+        CategoriesPanel_2            matlab.ui.container.Panel
+        ConfirmOrderButton           matlab.ui.control.StateButton
+        Image18                      matlab.ui.control.Image
+        Image17                      matlab.ui.control.Image
+        Image16                      matlab.ui.control.Image
+        MealsoftheDayListBox_2       matlab.ui.control.ListBox
+        MealsoftheDayListBox_2Label  matlab.ui.control.Label
+        ProfileInformationPanel      matlab.ui.container.Panel
+        Image15                      matlab.ui.control.Image
+        Image14                      matlab.ui.control.Image
+        ListBox                      matlab.ui.control.ListBox
+        OrderPerferencesPanel        matlab.ui.container.Panel
+        SelectListBox                matlab.ui.control.ListBox
+        SelectListBoxLabel           matlab.ui.control.Label
+        GalleryTab                   matlab.ui.container.Tab
+        WhatsinStockLabel            matlab.ui.control.Label
+        DessertButton                matlab.ui.control.StateButton
+        SnacksButton                 matlab.ui.control.StateButton
+        DrinksButton                 matlab.ui.control.StateButton
+        DinnerButton                 matlab.ui.control.StateButton
+        LunchButton                  matlab.ui.control.StateButton
+        BreakfastButton              matlab.ui.control.StateButton
+        OrderPageButton              matlab.ui.control.StateButton
+        SearchPageButton             matlab.ui.control.StateButton
+        Image6                       matlab.ui.control.Image
+        Image5                       matlab.ui.control.Image
+        Image4                       matlab.ui.control.Image
+        Image3                       matlab.ui.control.Image
+        Image2                       matlab.ui.control.Image
+        Image                        matlab.ui.control.Image
+        SearchTab                    matlab.ui.container.Tab
+        TextArea_3                   matlab.ui.control.TextArea
+        Hyperlink3                   matlab.ui.control.Hyperlink
+        Image19                      matlab.ui.control.Image
+        GalleryButton                matlab.ui.control.StateButton
+        TextArea                     matlab.ui.control.TextArea
+        Hyperlink2                   matlab.ui.control.Hyperlink
+        Image12                      matlab.ui.control.Image
+    end
+
+    
+    properties (Access = public)
+         Lab2_AssignmentAngie
+         EstopStatus = 'Run'  % Instance of Estop
+    end
+    
+    methods (Access = public)
+        function app = Lab2_GUI
+        app@matlab.apps.AppBase(); 
+        createComponents(app);
+        end
+
+        % Initialization method
+        function initialize(app, lab2Assignment)
+        app.Lab2_AssignmentAngie = lab2Assignment;
+        
+        % Register the callback for the E-stop switch
+        app.EstopSwitch.ValueChangedFcn = @(src, event)app.estopSwitchValueChanged(src, event);
+        end
+
+        function toggleEstop(app)
+            % Toggle the E-stop status between 'Run' and 'Stop'
+            if strcmp(app.EstopStatus, 'Run')
+                app.EstopStatus = 'Stop';
+            else
+                app.EstopStatus = 'Run';
+            end
+       end
+    end
+
+
+
+    % Callbacks that handle component events
+    methods (Access = private)
+
+        % Button pushed function: MyprofileButton
+        function MyprofileButtonPushed(app, event)
+            % Switch to the "Order" tab
+            app.TabGroup.SelectedTab = app.OrderTab;
+        end
+
+        % Button pushed function: WhatsinstockButton
+        function WhatsinstockButtonPushed(app, event)
+            % Switch to the "Order" tab
+            app.TabGroup.SelectedTab = app.GalleryTab;
+        end
+
+        % Button pushed function: SeeallMealsButton
+        function SeeallMealsButtonPushed(app, event)
+            app.TabGroup.SelectedTab = app.OrderTab;
+        end
+
+        % Value changed function: GETSTARTEDButton
+        function GETSTARTEDButtonValueChanged(app, event)
+            app.TabGroup.SelectedTab = app.OrderTab;
+        end
+
+        % Value changed function: GalleryButton
+        function GalleryButtonValueChanged(app, event)
+            value = app.GalleryButton.Value;
+            app.TabGroup.SelectedTab = app.GalleryTab;
+        end
+
+        % Value changed function: OrderPageButton
+        function OrderPageButtonValueChanged(app, event)
+            value = app.OrderPageButton.Value;
+            app.TabGroup.SelectedTab = app.HomeTab;
+        end
+
+        % Value changed function: SearchPageButton
+        function SearchPageButtonValueChanged(app, event)
+            value = app.SearchPageButton.Value;
+            app.TabGroup.SelectedTab = app.SearchTab;
+        end
+
+        % Value changed function: GalleryButton_2
+        function GalleryButton_2ValueChanged(app, event)
+            value = app.GalleryButton_2.Value;
+            app.TabGroup.SelectedTab = app.GalleryTab;
+        end
+
+        % Value changed function: EstopSwitch
+        function EstopSwitchValueChanged(app, event)
+            value = app.EstopSwitch.Value;
+        
+            if app.EstopSwitch.Value % Check if the switch is 'On' (or true)
+                app.EstopStatus = 'Stop';
+            else
+                app.EstopStatus = 'Run';
+            end
+        
+            % If toggleEstop is supposed to reflect the change of the switch, call it here
+            % app.toggleEstop(); % This would be necessary if toggleEstop does more than just switch the EstopStatus
+        
+            % Notify the Lab2_AssignmentAngie instance of the E-stop change
+            app.Lab2_AssignmentAngie.handleEstopChange(app.EstopStatus);
+        end
+
+        % Value changed function: HomePageButton
+        function HomePageButtonValueChanged(app, event)
+            value = app.HomePageButton.Value;
+            app.TabGroup.SelectedTab = app.HomeTab;
+        end
+
+        % Value changed function: ConfirmOrderButton
+        function ConfirmOrderButtonValueChanged(app, event)
+            %value = app.ConfirmOrderButton.Value;
+            app.Lab2_AssignmentAngie.objectLocater();  % Call the objectLocater method
+        end
+    end
+
+    % Component initialization
+    methods (Access = private)
+
+        % Create UIFigure and components
+        function createComponents(app)
+
+            % Create UIFigure and hide until all components are created
+            app.UIFigure = uifigure('Visible', 'off');
+            app.UIFigure.Position = [100 100 653 500];
+            app.UIFigure.Name = 'MATLAB App';
+
+            % Create TabGroup
+            app.TabGroup = uitabgroup(app.UIFigure);
+            app.TabGroup.Position = [6 21 645 480];
+
+            % Create HomeTab
+            app.HomeTab = uitab(app.TabGroup);
+            app.HomeTab.Title = 'Home';
+
+            % Create Image13
+            app.Image13 = uiimage(app.HomeTab);
+            app.Image13.Position = [0 -78 644 664];
+            app.Image13.ImageSource = 'Green Aesthetic Computer Template _ Powerpoint slide designs, Powerpoint background templates, Powerpoint background design.jpeg';
+
+            % Create MyprofileButton
+            app.MyprofileButton = uibutton(app.HomeTab, 'push');
+            app.MyprofileButton.ButtonPushedFcn = createCallbackFcn(app, @MyprofileButtonPushed, true);
+            app.MyprofileButton.Position = [76 127 100 22];
+            app.MyprofileButton.Text = 'My profile';
+
+            % Create SeeallMealsButton
+            app.SeeallMealsButton = uibutton(app.HomeTab, 'push');
+            app.SeeallMealsButton.ButtonPushedFcn = createCallbackFcn(app, @SeeallMealsButtonPushed, true);
+            app.SeeallMealsButton.Position = [461 127 100 22];
+            app.SeeallMealsButton.Text = 'See all Meals';
+
+            % Create EstopSwitchLabel
+            app.EstopSwitchLabel = uilabel(app.HomeTab);
+            app.EstopSwitchLabel.HorizontalAlignment = 'center';
+            app.EstopSwitchLabel.FontName = 'Chalkboard';
+            app.EstopSwitchLabel.FontWeight = 'bold';
+            app.EstopSwitchLabel.FontColor = [0.6353 0.0784 0.1843];
+            app.EstopSwitchLabel.Position = [380 11 41 22];
+            app.EstopSwitchLabel.Text = 'E-stop';
+
+            % Create EstopSwitch
+            app.EstopSwitch = uiswitch(app.HomeTab, 'slider');
+            app.EstopSwitch.Items = {'Run', 'Stop'};
+            app.EstopSwitch.ValueChangedFcn = createCallbackFcn(app, @EstopSwitchValueChanged, true);
+            app.EstopSwitch.FontName = 'Chalkboard';
+            app.EstopSwitch.FontWeight = 'bold';
+            app.EstopSwitch.FontColor = [0.6353 0.0784 0.1843];
+            app.EstopSwitch.Position = [376 48 45 20];
+            app.EstopSwitch.Value = 'Run';
+
+            % Create GETSTARTEDButton
+            app.GETSTARTEDButton = uibutton(app.HomeTab, 'state');
+            app.GETSTARTEDButton.ValueChangedFcn = createCallbackFcn(app, @GETSTARTEDButtonValueChanged, true);
+            app.GETSTARTEDButton.Text = 'GET STARTED';
+            app.GETSTARTEDButton.Position = [246 284 147 28];
+
+            % Create StartheretogettheShelfElfbottoprepareyoureverydaymealLabel
+            app.StartheretogettheShelfElfbottoprepareyoureverydaymealLabel = uilabel(app.HomeTab);
+            app.StartheretogettheShelfElfbottoprepareyoureverydaymealLabel.HorizontalAlignment = 'center';
+            app.StartheretogettheShelfElfbottoprepareyoureverydaymealLabel.FontName = 'Comic Sans MS';
+            app.StartheretogettheShelfElfbottoprepareyoureverydaymealLabel.FontColor = [1 1 1];
+            app.StartheretogettheShelfElfbottoprepareyoureverydaymealLabel.Position = [64 368 525 44];
+            app.StartheretogettheShelfElfbottoprepareyoureverydaymealLabel.Text = 'Begin your culinary journey with ShelfElf, your personalised meal preparation bot';
+
+            % Create Label
+            app.Label = uilabel(app.HomeTab);
+            app.Label.HorizontalAlignment = 'center';
+            app.Label.FontName = 'Chalkboard';
+            app.Label.FontSize = 14;
+            app.Label.FontColor = [0.3333 0.4902 0.1333];
+            app.Label.Position = [172 325 310 30];
+            app.Label.Text = 'Let ShelfElf prep your meals for the day';
+
+            % Create WhatsinstockButton
+            app.WhatsinstockButton = uibutton(app.HomeTab, 'push');
+            app.WhatsinstockButton.ButtonPushedFcn = createCallbackFcn(app, @WhatsinstockButtonPushed, true);
+            app.WhatsinstockButton.Position = [271 127 100 22];
+            app.WhatsinstockButton.Text = 'What''s in stock';
+
+            % Create Image9
+            app.Image9 = uiimage(app.HomeTab);
+            app.Image9.Position = [464 167 100 100];
+            app.Image9.ImageSource = 'Icon store matcha.jpeg';
+
+            % Create Image10
+            app.Image10 = uiimage(app.HomeTab);
+            app.Image10.Position = [269 167 107 100];
+            app.Image10.ImageSource = 'Sage Green Cat icon.jpeg';
+
+            % Create Image11
+            app.Image11 = uiimage(app.HomeTab);
+            app.Image11.Position = [76 167 100 102];
+            app.Image11.ImageSource = 'Jessica on Snapchat.jpeg';
+
+            % Create TextArea_2
+            app.TextArea_2 = uitextarea(app.HomeTab);
+            app.TextArea_2.HorizontalAlignment = 'center';
+            app.TextArea_2.FontName = 'Avenir';
+            app.TextArea_2.FontWeight = 'bold';
+            app.TextArea_2.FontColor = [0.9686 0.5255 0.5255];
+            app.TextArea_2.Position = [172 8 150 60];
+            app.TextArea_2.Value = {'Functional Emergency Stop for Robot Operation'};
+
+            % Create OrderTab
+            app.OrderTab = uitab(app.TabGroup);
+            app.OrderTab.Title = 'Order';
+
+            % Create ProfileInformationPanel
+            app.ProfileInformationPanel = uipanel(app.OrderTab);
+            app.ProfileInformationPanel.ForegroundColor = [0.9961 1 0.9961];
+            app.ProfileInformationPanel.Title = 'Profile Information';
+            app.ProfileInformationPanel.BackgroundColor = [0.5255 0.6196 0.4784];
+            app.ProfileInformationPanel.FontName = 'Chalkboard';
+            app.ProfileInformationPanel.FontWeight = 'bold';
+            app.ProfileInformationPanel.Position = [45 273 554 139];
+
+            % Create OrderPerferencesPanel
+            app.OrderPerferencesPanel = uipanel(app.ProfileInformationPanel);
+            app.OrderPerferencesPanel.Title = 'Order Perferences';
+            app.OrderPerferencesPanel.BackgroundColor = [0.9412 0.9686 0.9137];
+            app.OrderPerferencesPanel.FontName = 'Chalkboard';
+            app.OrderPerferencesPanel.Position = [347 11 195 94];
+
+            % Create SelectListBoxLabel
+            app.SelectListBoxLabel = uilabel(app.OrderPerferencesPanel);
+            app.SelectListBoxLabel.HorizontalAlignment = 'right';
+            app.SelectListBoxLabel.Position = [3 41 39 22];
+            app.SelectListBoxLabel.Text = 'Select';
+
+            % Create SelectListBox
+            app.SelectListBox = uilistbox(app.OrderPerferencesPanel);
+            app.SelectListBox.Items = {'Order history', 'Favourites', 'Recommendations'};
+            app.SelectListBox.Position = [57 7 134 58];
+            app.SelectListBox.Value = 'Order history';
+
+            % Create ListBox
+            app.ListBox = uilistbox(app.ProfileInformationPanel);
+            app.ListBox.Items = {'Account Info', 'Delivery Address', 'Inbox'};
+            app.ListBox.FontColor = [0.149 0.149 0.149];
+            app.ListBox.BackgroundColor = [0.9647 0.9804 0.949];
+            app.ListBox.Position = [113 18 100 77];
+            app.ListBox.Value = 'Account Info';
+
+            % Create Image14
+            app.Image14 = uiimage(app.ProfileInformationPanel);
+            app.Image14.Position = [10 16 90 86];
+            app.Image14.ImageSource = 'افـتـارات وه_ـمـية _.jpeg';
+
+            % Create Image15
+            app.Image15 = uiimage(app.ProfileInformationPanel);
+            app.Image15.Position = [249 13 87 93];
+            app.Image15.ImageSource = 'icon.jpeg';
+
+            % Create CategoriesPanel_2
+            app.CategoriesPanel_2 = uipanel(app.OrderTab);
+            app.CategoriesPanel_2.ForegroundColor = [0.9961 1 0.9961];
+            app.CategoriesPanel_2.Title = 'Categories';
+            app.CategoriesPanel_2.BackgroundColor = [0.5255 0.6196 0.4784];
+            app.CategoriesPanel_2.FontName = 'Chalkboard';
+            app.CategoriesPanel_2.FontWeight = 'bold';
+            app.CategoriesPanel_2.Position = [45 67 554 179];
+
+            % Create MealsoftheDayListBox_2Label
+            app.MealsoftheDayListBox_2Label = uilabel(app.CategoriesPanel_2);
+            app.MealsoftheDayListBox_2Label.HorizontalAlignment = 'right';
+            app.MealsoftheDayListBox_2Label.FontName = 'Chalkboard';
+            app.MealsoftheDayListBox_2Label.FontColor = [1 1 1];
+            app.MealsoftheDayListBox_2Label.Position = [16 119 100 22];
+            app.MealsoftheDayListBox_2Label.Text = 'Meals of the Day';
+
+            % Create MealsoftheDayListBox_2
+            app.MealsoftheDayListBox_2 = uilistbox(app.CategoriesPanel_2);
+            app.MealsoftheDayListBox_2.Items = {'Breakfast', 'Lunch', 'Dinner', 'Drinks', 'Snack', 'Dessert'};
+            app.MealsoftheDayListBox_2.BackgroundColor = [0.9647 0.9804 0.949];
+            app.MealsoftheDayListBox_2.Position = [131 13 100 130];
+            app.MealsoftheDayListBox_2.Value = 'Breakfast';
+
+            % Create Image16
+            app.Image16 = uiimage(app.CategoriesPanel_2);
+            app.Image16.Position = [19 29 90 79];
+            app.Image16.ImageSource = 'Ｙｏｏｎｉｅ.jpeg';
+
+            % Create Image17
+            app.Image17 = uiimage(app.CategoriesPanel_2);
+            app.Image17.Position = [405 -22 172 179];
+            app.Image17.ImageSource = 'icon8.png';
+
+            % Create Image18
+            app.Image18 = uiimage(app.CategoriesPanel_2);
+            app.Image18.Position = [234 -61 211 205];
+            app.Image18.ImageSource = 'icon7.png';
+
+            % Create ConfirmOrderButton
+            app.ConfirmOrderButton = uibutton(app.CategoriesPanel_2, 'state');
+            app.ConfirmOrderButton.ValueChangedFcn = createCallbackFcn(app, @ConfirmOrderButtonValueChanged, true);
+            app.ConfirmOrderButton.Text = 'Confirm Order';
+            app.ConfirmOrderButton.BackgroundColor = [1 1 1];
+            app.ConfirmOrderButton.FontWeight = 'bold';
+            app.ConfirmOrderButton.FontColor = [0.4667 0.6745 0.1882];
+            app.ConfirmOrderButton.Position = [443 8 100 22];
+
+            % Create GalleryButton_2
+            app.GalleryButton_2 = uibutton(app.OrderTab, 'state');
+            app.GalleryButton_2.ValueChangedFcn = createCallbackFcn(app, @GalleryButton_2ValueChanged, true);
+            app.GalleryButton_2.Text = 'Gallery ->';
+            app.GalleryButton_2.BackgroundColor = [1 1 1];
+            app.GalleryButton_2.FontWeight = 'bold';
+            app.GalleryButton_2.FontColor = [0.4667 0.6745 0.1882];
+            app.GalleryButton_2.Position = [500 11 100 22];
+
+            % Create HomePageButton
+            app.HomePageButton = uibutton(app.OrderTab, 'state');
+            app.HomePageButton.ValueChangedFcn = createCallbackFcn(app, @HomePageButtonValueChanged, true);
+            app.HomePageButton.Text = '<- Home Page';
+            app.HomePageButton.BackgroundColor = [1 1 1];
+            app.HomePageButton.FontWeight = 'bold';
+            app.HomePageButton.FontColor = [0.4667 0.6745 0.1882];
+            app.HomePageButton.Position = [27 11 100 22];
+
+            % Create GalleryTab
+            app.GalleryTab = uitab(app.TabGroup);
+            app.GalleryTab.Title = 'Gallery';
+
+            % Create Image
+            app.Image = uiimage(app.GalleryTab);
+            app.Image.ScaleMethod = 'fill';
+            app.Image.Position = [454 108 100 100];
+            app.Image.ImageSource = 'icon1.png';
+
+            % Create Image2
+            app.Image2 = uiimage(app.GalleryTab);
+            app.Image2.Position = [455 251 100 138];
+            app.Image2.ImageSource = 'icon2.png';
+
+            % Create Image3
+            app.Image3 = uiimage(app.GalleryTab);
+            app.Image3.Position = [92 258 97 124];
+            app.Image3.ImageSource = 'icon3.png';
+
+            % Create Image4
+            app.Image4 = uiimage(app.GalleryTab);
+            app.Image4.Position = [91 106 100 100];
+            app.Image4.ImageSource = 'icon4.png';
+
+            % Create Image5
+            app.Image5 = uiimage(app.GalleryTab);
+            app.Image5.Position = [279 275 100 100];
+            app.Image5.ImageSource = 'icon5.png';
+
+            % Create Image6
+            app.Image6 = uiimage(app.GalleryTab);
+            app.Image6.Position = [279 106 100 99];
+            app.Image6.ImageSource = 'icon6.png';
+
+            % Create SearchPageButton
+            app.SearchPageButton = uibutton(app.GalleryTab, 'state');
+            app.SearchPageButton.ValueChangedFcn = createCallbackFcn(app, @SearchPageButtonValueChanged, true);
+            app.SearchPageButton.Text = 'Search Page ->';
+            app.SearchPageButton.BackgroundColor = [1 1 1];
+            app.SearchPageButton.FontWeight = 'bold';
+            app.SearchPageButton.FontColor = [0.4667 0.6745 0.1882];
+            app.SearchPageButton.Position = [499 11 103 22];
+
+            % Create OrderPageButton
+            app.OrderPageButton = uibutton(app.GalleryTab, 'state');
+            app.OrderPageButton.ValueChangedFcn = createCallbackFcn(app, @OrderPageButtonValueChanged, true);
+            app.OrderPageButton.Text = '<- Order Page';
+            app.OrderPageButton.BackgroundColor = [1 1 1];
+            app.OrderPageButton.FontWeight = 'bold';
+            app.OrderPageButton.FontColor = [0.4667 0.6745 0.1882];
+            app.OrderPageButton.Position = [26 11 100 22];
+
+            % Create BreakfastButton
+            app.BreakfastButton = uibutton(app.GalleryTab, 'state');
+            app.BreakfastButton.Text = 'Breakfast';
+            app.BreakfastButton.FontName = 'Chalkboard';
+            app.BreakfastButton.FontSize = 14;
+            app.BreakfastButton.FontWeight = 'bold';
+            app.BreakfastButton.FontColor = [0.2824 0.4118 0.1216];
+            app.BreakfastButton.Position = [92 237 100 25];
+
+            % Create LunchButton
+            app.LunchButton = uibutton(app.GalleryTab, 'state');
+            app.LunchButton.Text = 'Lunch';
+            app.LunchButton.FontName = 'Chalkboard';
+            app.LunchButton.FontSize = 14;
+            app.LunchButton.FontWeight = 'bold';
+            app.LunchButton.FontColor = [0.2824 0.4118 0.1216];
+            app.LunchButton.Position = [278 237 100 25];
+
+            % Create DinnerButton
+            app.DinnerButton = uibutton(app.GalleryTab, 'state');
+            app.DinnerButton.Text = 'Dinner';
+            app.DinnerButton.FontName = 'Chalkboard';
+            app.DinnerButton.FontSize = 14;
+            app.DinnerButton.FontWeight = 'bold';
+            app.DinnerButton.FontColor = [0.2824 0.4118 0.1216];
+            app.DinnerButton.Position = [453 237 100 25];
+
+            % Create DrinksButton
+            app.DrinksButton = uibutton(app.GalleryTab, 'state');
+            app.DrinksButton.Text = 'Drinks';
+            app.DrinksButton.FontName = 'Chalkboard';
+            app.DrinksButton.FontSize = 14;
+            app.DrinksButton.FontWeight = 'bold';
+            app.DrinksButton.FontColor = [0.2824 0.4118 0.1216];
+            app.DrinksButton.Position = [92 74 100 25];
+
+            % Create SnacksButton
+            app.SnacksButton = uibutton(app.GalleryTab, 'state');
+            app.SnacksButton.Text = 'Snacks';
+            app.SnacksButton.FontName = 'Chalkboard';
+            app.SnacksButton.FontSize = 14;
+            app.SnacksButton.FontWeight = 'bold';
+            app.SnacksButton.FontColor = [0.2824 0.4118 0.1216];
+            app.SnacksButton.Position = [278 74 100 25];
+
+            % Create DessertButton
+            app.DessertButton = uibutton(app.GalleryTab, 'state');
+            app.DessertButton.Text = 'Dessert';
+            app.DessertButton.FontName = 'Chalkboard';
+            app.DessertButton.FontSize = 14;
+            app.DessertButton.FontWeight = 'bold';
+            app.DessertButton.FontColor = [0.2824 0.4118 0.1216];
+            app.DessertButton.Position = [456 74 100 25];
+
+            % Create WhatsinStockLabel
+            app.WhatsinStockLabel = uilabel(app.GalleryTab);
+            app.WhatsinStockLabel.FontName = 'DecoType Naskh';
+            app.WhatsinStockLabel.FontSize = 16;
+            app.WhatsinStockLabel.FontWeight = 'bold';
+            app.WhatsinStockLabel.FontColor = [0.4667 0.6745 0.1882];
+            app.WhatsinStockLabel.Position = [262 411 120 22];
+            app.WhatsinStockLabel.Text = 'What''s in Stock';
+
+            % Create SearchTab
+            app.SearchTab = uitab(app.TabGroup);
+            app.SearchTab.Title = 'Search';
+
+            % Create Image12
+            app.Image12 = uiimage(app.SearchTab);
+            app.Image12.Position = [1 3 639 455];
+            app.Image12.ImageSource = 'Google search templete cute 💗.jpeg';
+
+            % Create Hyperlink2
+            app.Hyperlink2 = uihyperlink(app.SearchTab);
+            app.Hyperlink2.URL = 'https://www.woolworths.com.au/?utm_source=google&utm_medium=cpc&utm_campaign=WW-0001&cq_net=g&cq_src=GOOGLE&cq_cmp=Woolies_8458_BAU_Brand_Exact_Head%20Term%20Pure_WW-0001&cq_med=71700000071994282&cq_plac=&cq_term=woolworths&ds_adt=&cq_plt=gp&cq_gclid=CjwKCAjw7c2pBhAZEiwA88pOF9TqWBwI3q790H22A4HGZWsAoFJjKowIudiV3FWZ1Op-FpNmKClg7BoCyTQQAvD_BwE&ds_de=c&ds_pc=&ds_cr=528130855897&ds_tid=aud-848956741194:kwd-14367402&ds_locphys=9071713&ds_pid=&cmpid=smsm:ds:GOOGLE:Woolies_8458_BAU_Brand_Exact_Head%20Term%20Pure_WW-0001:woolworths&gclid=CjwKCAjw7c2pBhAZEiwA88pOF9TqWBwI3q790H22A4HGZWsAoFJjKowIudiV3FWZ1Op-FpNmKClg7BoCyTQQAvD_BwE&gclsrc=aw.ds';
+            app.Hyperlink2.FontColor = [0.3529 0.502 0.1647];
+            app.Hyperlink2.Position = [288 259 79 22];
+            app.Hyperlink2.Text = 'Supermarket';
+
+            % Create TextArea
+            app.TextArea = uitextarea(app.SearchTab);
+            app.TextArea.HorizontalAlignment = 'center';
+            app.TextArea.FontName = 'Chalkboard';
+            app.TextArea.FontSize = 14;
+            app.TextArea.FontColor = [0.4471 0.502 0.4235];
+            app.TextArea.Position = [220 289 206 63];
+            app.TextArea.Value = {'Place an order for additonal groceries from your nearby supermarket'};
+
+            % Create GalleryButton
+            app.GalleryButton = uibutton(app.SearchTab, 'state');
+            app.GalleryButton.ValueChangedFcn = createCallbackFcn(app, @GalleryButtonValueChanged, true);
+            app.GalleryButton.Text = '<- Gallery';
+            app.GalleryButton.BackgroundColor = [1 1 1];
+            app.GalleryButton.FontWeight = 'bold';
+            app.GalleryButton.FontColor = [0.4667 0.6745 0.1882];
+            app.GalleryButton.Position = [16 11 100 22];
+
+            % Create Image19
+            app.Image19 = uiimage(app.SearchTab);
+            app.Image19.Position = [274 201 100 55];
+            app.Image19.ImageSource = 'Screen Shot 2023-10-23 at 9.45.47 pm.png';
+
+            % Create Hyperlink3
+            app.Hyperlink3 = uihyperlink(app.SearchTab);
+            app.Hyperlink3.URL = 'https://online-barcode-reader.inliteresearch.com/';
+            app.Hyperlink3.FontColor = [0.3333 0.4902 0.1333];
+            app.Hyperlink3.Position = [326 217 109 22];
+            app.Hyperlink3.Text = 'Bar Code Scanner';
+
+            % Create TextArea_3
+            app.TextArea_3 = uitextarea(app.SearchTab);
+            app.TextArea_3.HorizontalAlignment = 'center';
+            app.TextArea_3.FontName = 'Chalkboard';
+            app.TextArea_3.FontColor = [0.4471 0.502 0.4235];
+            app.TextArea_3.Position = [201 210 112 41];
+            app.TextArea_3.Value = {'Click here to scan your products'};
+
+            % Show the figure after all components are created
+            app.UIFigure.Visible = 'on';
+        end
+    end
+
+    % App creation and deletion
+    methods (Access = public)
+
+        % Construct app
+        function app = Lab2_GUI
+
+            % Create UIFigure and components
+            createComponents(app)
+
+            % Register the app with App Designer
+            registerApp(app, app.UIFigure)
+
+            if nargout == 0
+                clear app
+            end
+        end
+
+        % Code that executes before app deletion
+        function delete(app)
+
+            % Delete UIFigure when app is deleted
+            delete(app.UIFigure)
+        end
+    end
+end
