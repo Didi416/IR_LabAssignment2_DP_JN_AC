@@ -53,7 +53,7 @@ classdef Lab2_Assignment < handle
             self.robot1.model.animate(startQ1);
             startQ2 = deg2rad([0,-65,100,-180,-90,0]);
             self.robot2.model.animate(startQ2)
-            % self.clawAttach();
+            self.clawAttach();
         end
         %% Attach Gripper to Robot End Effectors
         function clawAttach(self)
@@ -120,29 +120,44 @@ classdef Lab2_Assignment < handle
 
             for i = 1:2
                 numSteps = 100;
-                x = boxPos(i,1) + 0.18;
-                y = boxPos(i,2);
-                z = boxPos(i,3) + 0.035;
+                % x = boxPos(i,1) + 0.18;
+                % y = boxPos(i,2);
+                % z = boxPos(i,3) + 0.035;
+                % 
+                % % Calculate start and end pose for the RMRC
+                % currentPos = self.robot1.model.getpos();
+                % pickUpBox = transl(x, y, z) * troty(-pi/2);
+                % pickUpBoxEndPose = self.robot1.model.ikcon(pickUpBox, elbowUp1);
+                % robot1Trajectory = jtraj(currentPos, pickUpBoxEndPose, numSteps);
+                % q = [pi/2,0,-pi/4];
+                % for x = 1:numSteps
+                %    endEffPos = self.robot1.model.getpos();
+                %    self.robot1.model.animate(robot1Trajectory(x,:));
+                %    drawnow();
+                %    self.Claw1_1.model.base = self.robot1.model.fkine(endEffPos).T * transl(0,0,0.09);
+                %    self.Claw1_1.model.animate(q);
+                %    drawnow();
+                %    self.Claw1_2.model.base = self.robot1.model.fkine(endEffPos).T * trotz(pi) * transl(0,0,0.09);
+                %    self.Claw1_2.model.animate(q);
+                %    drawnow();
+                % end
+                % disp("Robot arm positioned.");
+                % self.gripperOpenClose(0);
 
-                % Calculate start and end pose for the RMRC
-                currentPos = self.robot1.model.getpos();
-                pickUpBox = transl(x, y, z) * troty(-pi/2);
-                pickUpBoxEndPose = self.robot1.model.ikcon(pickUpBox, elbowUp1);
-                robot1Trajectory = jtraj(currentPos, pickUpBoxEndPose, numSteps);
-                for x = 1:numSteps
-                   self.robot1.model.animate(robot1Trajectory(x,:));
-                   drawnow();
-                end
-                disp("Robot arm positioned.");
+                currentPos2 = self.robot2.model.getpos();
+                pickup2 = transl(-0.5, 1.5, 0.8);
+                pickUpPos2 = self.robot2.model.ikcon(pickup2,elbowUp2);
 
                 % Call the RMRC function instead of using ikcon
-                % self.RMRC(currentPos, pickUpBoxEndPose, numSteps, elbowUp1); % Example: 100 steps
+                qMatrix = self.RMRC(self.robot2.model, currentPos2, pickUpPos2, numSteps, elbowUp2);
+                for r = 1:numSteps
+                    self.robot2.model.animate(qMatrix(r,:))
+                    drawnow();
+                end
             end
-            
-            % input('Press enter to end operation');
         end
 
-        function RMRC(self, currentPos, endPose, numSteps, elbowUp)
+        function qMatrix = RMRC(self, robot, currentPos, endPose, numSteps, elbowUp)
             t = 10;             % Total time (s)
             deltaT = 0.02;      % Control frequency
             steps = t/deltaT;   % No. of steps for simulation
@@ -150,28 +165,29 @@ classdef Lab2_Assignment < handle
             W = diag([1 1 1 0.1 0.1 0.1]);    % Weighting matrix for the velocity vector
 
             m = zeros(steps,1);             % Array for Measure of Manipulability
-            qMatrix = zeros(steps,7);       % Array for joint anglesR
-            qdot = zeros(steps,7);          % Array for joint velocities
+            qMatrix = zeros(steps,6);       % Array for joint anglesR
+            qdot = zeros(steps,6);          % Array for joint velocities
             theta = zeros(3,steps);         % Array for roll-pitch-yaw angles
             x = zeros(3,steps);             % Array for x-y-z trajectory
 
-            robot1Trajectory = jtraj(currentPos, endPose, numSteps);
-            % s = lspb(0,1,steps);                                                        % Trapezoidal trajectory scalar
+            robotTrajectory = jtraj(currentPos, endPose, numSteps)
+            % s = lspb(0,1,steps);                                                      % Trapezoidal trajectory scalar
             for i = 1:numSteps
-                T = self.robot1.model.fkine(robot1Trajectory(i,:)).T;
+                T = robot.fkine(robotTrajectory(i,:)).T;
                 x(1,i) = T(1,4);                                                        % Points in x
                 x(2,i) = T(2,4);                                                        % Points in y
                 x(3,i) = T(3,4);                                                        % Points in z
                 theta(1,i) = atan(T(2,1)/T(1,1));                                       % Roll angle
                 theta(2,i) = atan(-T(3,1)/sqrt((T(3,2)^2)+(T(3,3)^2)));                 % Pitch angle
                 theta(3,i) = atan(T(3,2)/T(3,3));                                       % Yaw angle
+                disp("Built traj.")
             end
 
-            T = [rpy2r(theta(1,1),theta(2,1),theta(3,1)) x(:,1);zeros(1,3) 1];          % Create transformation of first point and angle
-            qMatrix(1,:) = self.robot1.model.ikcon(T,elbowUp);                         % Solve joint angles to achieve first waypoint
+            T = [rpy2r(theta(1,1),theta(2,1),theta(3,1)) x(:,1);zeros(1,3) 1];          % Create transformation matrix of first point and angle
+            qMatrix(1,:) = robot.ikcon(T,elbowUp);                                      % Solve joint angles to achieve first waypoint
 
             for i = 1:steps-1
-                T = self.robot1.model.fkine(qMatrix(i,:)).T;                            % Get forward transformation at current joint state
+                T = robot.fkine(qMatrix(i,:)).T;                                        % Get forward transformation at current joint state
                 deltaX = x(:,i+1) - T(1:3,4);                                         	% Get position error from next waypoint
                 Rd = rpy2r(theta(1,i+1),theta(2,i+1),theta(3,i+1));                     % Get next RPY angles, convert to rotation matrix
                 Ra = T(1:3,1:3);                                                        % Current end-effector rotation matrix
@@ -181,23 +197,41 @@ classdef Lab2_Assignment < handle
                 angular_velocity = [S(3,2);S(1,3);S(2,1)];                              % Check the structure of Skew Symmetric matrix!!
                 % deltaTheta = tr2rpy(Rd*Ra');                                          % Convert rotation matrix to RPY angles
                 xdot = W*[linear_velocity;angular_velocity];                          	% Calculate end-effector velocity to reach next waypoint.
-                J = self.robot1.model.jacob0(qMatrix(i,:));                             % Get Jacobian at current joint state
+                J = robot.jacob0(qMatrix(i,:));                                         % Get Jacobian at current joint state
                 m(i) = sqrt(det(J*J'));
                 if m(i) < epsilon  % If manipulability is less than given threshold
                     lambda = (1 - m(i)/epsilon)*5E-2;
                 else
                     lambda = 0;
                 end
-                invJ = pinv(J) + lambda * eye(7);                                       % DLS Inverse
+                invJ = inv(J'*J + lambda *eye(6))*J';                                   % DLS Inverse
                 qdot(i,:) = (invJ*xdot)';                                               % Solve the RMRC equation (you may need to transpose the         vector)
                 for j = 1:6                                                             % Loop through joints 1 to 6
-                    if qMatrix(i,j) + deltaT*qdot(i,j) < self.robot1.model.qlim(j,1)                 % If next joint angle is lower than joint limit...
+                    if qMatrix(i,j) + deltaT*qdot(i,j) < robot.qlim(j,1)                % If next joint angle is lower than joint limit...
                         qdot(i,j) = 0; % Stop the motor
-                    elseif qMatrix(i,j) + deltaT*qdot(i,j) > self.robot1.model.qlim(j,2)             % If next joint angle is greater than joint limit ...
+                    elseif qMatrix(i,j) + deltaT*qdot(i,j) > robot.qlim(j,2)            % If next joint angle is greater than joint limit ...
                         qdot(i,j) = 0; % Stop the motor
                     end
                 end
+                disp("Stage 2")
                 qMatrix(i+1,:) = qMatrix(i,:) + deltaT*qdot(i,:);                       % Update next joint state based on joint velocities
+            end
+        end
+
+        function gripperOpenClose(self, state)
+            if state % open
+                q = [pi/2,0,-pi/4];
+            else % close
+                q = [pi/2,0,-pi/2];
+            end
+            gripperPos = self.Claw1_1.model.getpos();
+            endGripperPos = q;
+            gripperTraj = jtraj(gripperPos, endGripperPos, 30);
+            for i = 1:30
+                self.Claw1_1.model.animate(gripperTraj(i,:));
+                drawnow();
+                self.Claw1_2.model.animate(gripperTraj(i,:));
+                drawnow();
             end
         end
     end
