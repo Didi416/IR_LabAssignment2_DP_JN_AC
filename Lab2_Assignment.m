@@ -166,11 +166,6 @@ classdef Lab2_Assignment < handle
             endTrans2 = transl(-0.2, 1.5, 1);
             qMatrix = self.RMRC(self.robot2.model, currentPos2, endTrans2, elbowUp2);
             for r = 1:numSteps
-                pickUpPose = self.robot2.model.fkine(robot.getpos).T * transl(0,0,0.2) * troty(pi/2);
-                transformedVertices = [verts, ones(size(verts,1),1)] * pickUpPose';
-                set(boxes{boxNum}, 'Vertices', transformedVertices(:,1:3));
-                drawnow();
-
                 self.robot2.model.animate(qMatrix(r,:))
                 drawnow();
                 endEffPos = self.robot2.model.getpos();
@@ -186,6 +181,11 @@ classdef Lab2_Assignment < handle
             endTrans2 = transl(0.2, 1, 1);
             qMatrix = self.RMRC(self.robot2.model, currentPos2, endTrans2, elbowUp2);
             for r = 1:numSteps
+                pickUpPose = self.robot2.model.fkine(self.robot2.model.getpos).T * transl(0,0,0.2) * troty(pi/2);
+                transformedVertices = [vertices, ones(size(vertices,1),1)] * pickUpPose';
+                set(boxes{boxNum}, 'Vertices', transformedVertices(:,1:3));
+                drawnow();
+
                 self.robot2.model.animate(qMatrix(r,:))
                 drawnow();
                 endEffPos = self.robot2.model.getpos();
