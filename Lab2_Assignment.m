@@ -119,8 +119,8 @@ classdef Lab2_Assignment < handle
             elbowUp2 = deg2rad([0,-100,100,-180,-90,0]);
             q = [pi/2,0,-pi/4];
             steps = 100;
-            numSteps = 500;
-            boxNum = 3;
+            numSteps = 300;
+            boxNum = 5;
             vertices = verticesArray(:,:,boxNum);
 
             % LinearUR10 movements - no RMRC
@@ -148,6 +148,12 @@ classdef Lab2_Assignment < handle
             endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
             self.UR10Move(self.robot1.model, currentPos, endPose, steps, q, vertices, boxes{boxNum}, 1)
 
+            % - lift up
+            currentPos = self.robot1.model.getpos();
+            endTrans = transl(-0.5, 1, 1) * troty(pi/2);
+            endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
+            self.UR10Move(self.robot1.model, currentPos, endPose, steps, q, vertices, boxes{boxNum}, 1)
+
             % - counter near Robo
             currentPos = self.robot1.model.getpos();
             endTrans = transl(-0.2, 1.5, 0.8) * troty(pi/2);
@@ -163,7 +169,7 @@ classdef Lab2_Assignment < handle
 
             % Robo Movements - RMRC
             currentPos2 = self.robot2.model.fkine(self.robot2.model.getpos()).T;
-            endTrans2 = transl(-0.2, 1.5, 1);
+            endTrans2 = transl(0, 1.5, 1) * trotz(pi/2);
             qMatrix = self.RMRC(self.robot2.model, currentPos2, endTrans2, elbowUp2);
             for r = 1:numSteps
                 self.robot2.model.animate(qMatrix(r,:))
@@ -176,16 +182,33 @@ classdef Lab2_Assignment < handle
                 self.Claw2_2.model.animate(q);
                 drawnow();
             end
+            q = self.gripper2OpenClose(0);
 
             currentPos2 = self.robot2.model.fkine(self.robot2.model.getpos()).T;
             endTrans2 = transl(0.2, 1, 1);
             qMatrix = self.RMRC(self.robot2.model, currentPos2, endTrans2, elbowUp2);
             for r = 1:numSteps
-                pickUpPose = self.robot2.model.fkine(self.robot2.model.getpos).T * transl(0,0,0.2) * troty(pi/2);
+                pickUpPose = self.robot2.model.fkine(self.robot2.model.getpos).T * transl(0,0,0.022);
                 transformedVertices = [vertices, ones(size(vertices,1),1)] * pickUpPose';
                 set(boxes{boxNum}, 'Vertices', transformedVertices(:,1:3));
                 drawnow();
 
+                self.robot2.model.animate(qMatrix(r,:))
+                drawnow();
+                endEffPos = self.robot2.model.getpos();
+                self.Claw2_1.model.base = self.robot2.model.fkine(endEffPos).T;
+                self.Claw2_1.model.animate(q);
+                drawnow();
+                self.Claw2_2.model.base = self.robot2.model.fkine(endEffPos).T * trotz(pi);
+                self.Claw2_2.model.animate(q);
+                drawnow();
+            end
+            q = self.gripper2OpenClose(1);
+
+            currentPos2 = self.robot2.model.fkine(self.robot2.model.getpos()).T;
+            endTrans2 = transl(-0.2, 1.5, 1);
+            qMatrix = self.RMRC(self.robot2.model, currentPos2, endTrans2, elbowUp2);
+            for r = 1:numSteps
                 self.robot2.model.animate(qMatrix(r,:))
                 drawnow();
                 endEffPos = self.robot2.model.getpos();
@@ -223,7 +246,7 @@ classdef Lab2_Assignment < handle
         function qMatrix = RMRC(self, robot, currentPos, endPose, elbowUp)
             t = 10;             % Total time (s)
             deltaT = 0.02;      % Control frequency
-            steps = 500;   % No. of steps for simulation
+            steps = 300;   % No. of steps for simulation
             epsilon = 0.5;      % Threshold value for manipulability/Damped Least Squares
             W = diag([1 1 1 0.1 0.1 0.1]);    % Weighting matrix for the velocity vector
 
@@ -290,6 +313,22 @@ classdef Lab2_Assignment < handle
                 self.Claw1_1.model.animate(gripperTraj(i,:));
                 drawnow();
                 self.Claw1_2.model.animate(gripperTraj(i,:));
+                drawnow();
+            end
+        end
+        function q = gripper2OpenClose(self, state) % 0 = close, 1 = open
+            if state % open
+                q = [pi/2,0,-pi/4];
+            else % close
+                q = [pi/2,0,-pi/2];
+            end
+            gripperPos = self.Claw2_1.model.getpos();
+            endGripperPos = q;
+            gripperTraj = jtraj(gripperPos, endGripperPos, 30);
+            for i = 1:30
+                self.Claw2_1.model.animate(gripperTraj(i,:));
+                drawnow();
+                self.Claw2_2.model.animate(gripperTraj(i,:));
                 drawnow();
             end
         end
