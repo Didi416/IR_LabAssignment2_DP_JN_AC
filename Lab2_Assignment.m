@@ -26,7 +26,7 @@ classdef Lab2_Assignment < handle
             % Create an instance of Lab2_GUI
             % self.lab2GuiApp = Lab2_GUI();
             Environment_Lab2Angie();
-            self.initialiseRobots(-0.5,0,0);
+            self.initialiseRobots(-0.7,0,0);
             input("Press ENTER to start.");
             self.main();
         end
@@ -116,66 +116,78 @@ classdef Lab2_Assignment < handle
             end
             %--------------------------------------------------------------------------------------------%
             elbowUp1 = deg2rad([0,90,45,120,45,-90,0]);
-            elbowUp2 = deg2rad([0,-65,100,-180,-90,0]);
+            elbowUp2 = deg2rad([0,-100,100,-180,-90,0]);
             q = [pi/2,0,-pi/4];
-            numSteps = 100;
+            numSteps = 500;
             boxNum = 3;
             vertices = verticesArray(:,:,boxNum);
 
             % LinearUR10 movements - no RMRC
-            x = boxPos(boxNum,1) + 0.18;
-            y = boxPos(boxNum,2);
-            z = boxPos(boxNum,3) + 0.035;
-
-            % - point in front of box position
-            xF = x + 0.2;
-            currentPos = self.robot1.model.getpos();
-            endTrans = transl(xF, y, z) * troty(-pi/2);
-            endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 0)
-
-            % - box position
-            currentPos = self.robot1.model.getpos();
-            endTrans = transl(x, y, z) * troty(-pi/2);
-            endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 0)
-            q = self.gripperOpenClose(0);
-
-            % - back out in front of position
-            currentPos = self.robot1.model.getpos();
-            endTrans = transl(xF, y, z) * troty(-pi/2);
-            endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 1)
-
-            % - counter near Robo
-            currentPos = self.robot1.model.getpos();
-            endTrans = transl(-0.5, 1.5, 0.8) * troty(pi/2);
-            endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 1)
-            q = self.gripperOpenClose(1);
-
-            % - default pos
-            currentPos = self.robot1.model.getpos();
-            endTrans = transl(-0.5, 1, 1) * troty(pi/2);
-            endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 0)
+            % x = boxPos(boxNum,1) + 0.18;
+            % y = boxPos(boxNum,2);
+            % z = boxPos(boxNum,3) + 0.035;
+            % 
+            % % - point in front of box position
+            % xF = x + 0.2;
+            % currentPos = self.robot1.model.getpos();
+            % endTrans = transl(xF, y, z) * troty(-pi/2);
+            % endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
+            % self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 0)
+            % 
+            % % - box position
+            % currentPos = self.robot1.model.getpos();
+            % endTrans = transl(x, y, z) * troty(-pi/2);
+            % endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
+            % self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 0)
+            % q = self.gripperOpenClose(0);
+            % 
+            % % - back out in front of position
+            % currentPos = self.robot1.model.getpos();
+            % endTrans = transl(xF, y, z) * troty(-pi/2);
+            % endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
+            % self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 1)
+            % 
+            % % - counter near Robo
+            % currentPos = self.robot1.model.getpos();
+            % endTrans = transl(-0.2, 1.5, 1) * troty(pi/2);
+            % endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
+            % self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 1)
+            % q = self.gripperOpenClose(1);
+            % 
+            % % - default pos
+            % currentPos = self.robot1.model.getpos();
+            % endTrans = transl(-0.5, 1, 1) * troty(pi/2);
+            % endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
+            % self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 0)
 
             % Robo Movements - RMRC
-            currentPos2 = self.robot2.model.getpos();
-            endTrans2 = transl(-0.2, 1.5, 1) * trotz(pi);
-            endPose2 = self.robot2.model.ikcon(endTrans2,elbowUp2);
-            qMatrix = self.RMRC(self.robot2.model, currentPos2, endPose2, numSteps, elbowUp2);
+            currentPos2 = self.robot2.model.fkine(self.robot2.model.getpos()).T;
+            endTrans2 = transl(-0.2, 1.5, 1);
+            qMatrix = self.RMRC(self.robot2.model, currentPos2, endTrans2, elbowUp2);
             for r = 1:numSteps
                 self.robot2.model.animate(qMatrix(r,:))
                 drawnow();
+                endEffPos = self.robot2.model.getpos();
+                self.Claw2_1.model.base = self.robot2.model.fkine(endEffPos).T;
+                self.Claw2_1.model.animate(q);
+                drawnow();
+                self.Claw2_2.model.base = self.robot2.model.fkine(endEffPos).T * trotz(pi);
+                self.Claw2_2.model.animate(q);
+                drawnow();
             end
 
-            currentPos2 = self.robot2.model.getpos();
-            endTrans2 = transl(0.15, 1, 1) * trotz(pi);
-            endPose2 = self.robot2.model.ikcon(endTrans2,elbowUp2);
-            qMatrix = self.RMRC(self.robot2.model, currentPos2, endPose2, numSteps, elbowUp2);
+            currentPos2 = self.robot2.model.fkine(self.robot2.model.getpos()).T;
+            endTrans2 = transl(0.2, 1, 1);
+            qMatrix = self.RMRC(self.robot2.model, currentPos2, endTrans2, elbowUp2);
             for r = 1:numSteps
                 self.robot2.model.animate(qMatrix(r,:))
+                drawnow();
+                endEffPos = self.robot2.model.getpos();
+                self.Claw2_1.model.base = self.robot2.model.fkine(endEffPos).T;
+                self.Claw2_1.model.animate(q);
+                drawnow();
+                self.Claw2_2.model.base = self.robot2.model.fkine(endEffPos).T * trotz(pi);
+                self.Claw2_2.model.animate(q);
                 drawnow();
             end
         end
@@ -202,10 +214,10 @@ classdef Lab2_Assignment < handle
             end
             disp("Robot arm positioned.");
         end
-        function qMatrix = RMRC(self, robot, currentPos, endPose, numSteps, elbowUp)
+        function qMatrix = RMRC(self, robot, currentPos, endPose, elbowUp)
             t = 10;             % Total time (s)
             deltaT = 0.02;      % Control frequency
-            steps = t/deltaT;   % No. of steps for simulation
+            steps = 500;   % No. of steps for simulation
             epsilon = 0.5;      % Threshold value for manipulability/Damped Least Squares
             W = diag([1 1 1 0.1 0.1 0.1]);    % Weighting matrix for the velocity vector
 
@@ -215,24 +227,22 @@ classdef Lab2_Assignment < handle
             theta = zeros(3,steps);         % Array for roll-pitch-yaw angles
             x = zeros(3,steps);             % Array for x-y-z trajectory
 
-            robotTrajectory = jtraj(currentPos, endPose, numSteps);
-            % s = lspb(0,1,steps);                                                        % Trapezoidal trajectory scalar
-            for i = 1:numSteps
-                T = robot.fkine(robotTrajectory(i,:)).T;
-                x(1,i) = T(1,4);                                                        % Points in x
-                x(2,i) = T(2,4);                                                        % Points in y
-                x(3,i) = T(3,4);                                                        % Points in z
-                theta(1,i) = atan(T(2,1)/T(1,1));                                       % Roll angle
-                theta(2,i) = atan(-T(3,1)/sqrt((T(3,2)^2)+(T(3,3)^2)));                 % Pitch angle
-                theta(3,i) = atan(T(3,2)/T(3,3));                                       % Yaw angle
+            s = lspb(0,1,steps);                                                        % Trapezoidal trajectory scalar
+            for i = 1:steps
+                x(1,i) = (1-s(i))*currentPos(1,4) + s(i)*endPose(1,4);                  % Points in x
+                x(2,i) = (1-s(i))*currentPos(2,4) + s(i)*endPose(2,4);                  % Points in y
+                x(3,i) = (1-s(i))*currentPos(3,4) + s(i)*endPose(3,4);                  % Points in z
+                theta(1,i) = 0;                                       % Roll angle
+                theta(2,i) = 0;                 % Pitch angle
+                theta(3,i) = 0;                                       % Yaw angle
             end
 
-            T = [rpy2r(theta(1,1),theta(2,1),theta(3,1)) x(:,1);zeros(1,3) 1];          % Create transformation of first point and angle
-            qMatrix(1,:) = robot.ikcon(T,elbowUp);                         % Solve joint angles to achieve first waypoint
+            T = currentPos;          % Create transformation of first point and angle
+            qMatrix(1,:) = robot.ikcon(T,elbowUp);                                      % Solve joint angles to achieve first waypoint
 
             for i = 1:steps-1
-                T = robot.fkine(qMatrix(i,:)).T;                            % Get forward transformation at current joint state
-                deltaX = x(:,i+1) - T(1:3,4);                                         	% Get position error from next waypoint
+                T = robot.fkine(qMatrix(i,:)).T;                                        % Get forward transformation at current joint state
+                deltaX = x(:,i+1) - T(1:3,4);   
                 Rd = rpy2r(theta(1,i+1),theta(2,i+1),theta(3,i+1));                     % Get next RPY angles, convert to rotation matrix
                 Ra = T(1:3,1:3);                                                        % Current end-effector rotation matrix
                 Rdot = (1/deltaT)*(Rd - Ra);                                            % Calculate rotation matrix error
