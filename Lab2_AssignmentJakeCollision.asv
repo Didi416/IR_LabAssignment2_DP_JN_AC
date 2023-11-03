@@ -1,21 +1,22 @@
 classdef Lab2_AssignmentAngie < handle
-    
+
     properties (Access = private)
         lab2GuiApp  % Instance of Lab2_GUI
     end
-    
+
     properties (Constant)
         estopStatus = 'Run'; % Initialize to 'Run'
     end
-    
+
     properties
         robot1 % Instance of the first robot
         robot2 % Instance of the second robot
+
     end
-    
+
     %% Constructor
     methods
-        function self = Lab2_AssignmentAngie 
+        function self = Lab2_AssignmentAngie
             clc
             clf
             % Create an instance of Lab2_GUI
@@ -24,7 +25,7 @@ classdef Lab2_AssignmentAngie < handle
             self.initialiseRobots();
             input('Press enter to start');
             %self.objectLocater();
-            self.beansCollider();
+            self.beansColliderfake();
         end
     end
 
@@ -35,7 +36,7 @@ classdef Lab2_AssignmentAngie < handle
             self.lab2GuiApp.UIFigure.Visible = 'on';
         end
     end
-    
+
     %% E-stop
     methods (Static)
         % Method to toggle E-stop status
@@ -48,12 +49,12 @@ classdef Lab2_AssignmentAngie < handle
             end
         end
     end
-    
+
     %% Defined positions of Groceries
     methods
         function initialiseRobots(self)
             % Initialise robot instances
-            self.robot1 = LinearUR10;
+            self.robot1 = LinearUR10
             self.robot2 = Robo;
         end
 
@@ -61,38 +62,38 @@ classdef Lab2_AssignmentAngie < handle
             % This function defines positions and initiates robot movement
 
             % Pick item from cupboard
-            pickUps1 = [-1.4, -0.2, 1.29; 
-                        -1.4, -0.2, 1.0;
-                        -1.4, 1.0, 1.0;
-                        -1.35, -0.2, 0.47;
-                        -1.35, 1.0, 0.47;
-                        -1.35, 0.45, 0.2];
-      
+            pickUps1 = [-1.4, -0.2, 1.29;
+                -1.4, -0.2, 1.0;
+                -1.4, 1.0, 1.0;
+                -1.35, -0.2, 0.47;
+                -1.35, 1.0, 0.47;
+                -1.35, 0.45, 0.2];
+
             % Give to the robot 2
             endPos1 = [-0.5, 1.5, 1.2;
-                       -0.5, 1.5, 1.2;
-                       -0.5, 1.5, 1.2;
-                       -0.5, 1.5, 1.2;
-                       -0.5, 1.5, 1.2;
-                       -0.5, 1.5, 1.2];
+                -0.5, 1.5, 1.2;
+                -0.5, 1.5, 1.2;
+                -0.5, 1.5, 1.2;
+                -0.5, 1.5, 1.2;
+                -0.5, 1.5, 1.2];
 
             % Pick up from robot 1
             pickUps2 = [-0.5, 1.5, 0.8;
-                        -0.5, 1.5, 0.8
-                        -0.5, 1.5, 0.8
-                        -0.5, 1.5, 0.8
-                        -0.5, 1.5, 0.8
-                        -0.5, 1.5, 0.8];
-               
-            % Give to user 
-            endPos2 = [0.5, 1.0, 0.9;
-                       0.5, 1.0, 0.9;
-                       0.5, 1.0, 0.9;
-                       0.5, 1.0, 0.9;
-                       0.5, 1.0, 0.9;
-                       0.5, 1.0, 0.9];
+                -0.5, 1.5, 0.8
+                -0.5, 1.5, 0.8
+                -0.5, 1.5, 0.8
+                -0.5, 1.5, 0.8
+                -0.5, 1.5, 0.8];
 
-             %%% Mesh 1 
+            % Give to user
+            endPos2 = [0.5, 1.0, 0.9;
+                0.5, 1.0, 0.9;
+                0.5, 1.0, 0.9;
+                0.5, 1.0, 0.9;
+                0.5, 1.0, 0.9;
+                0.5, 1.0, 0.9];
+
+            %%% Mesh 1
             % Y = ones(8,10)
             % Y = Y*-0.45
             % z = 0:(1/12):0.75
@@ -100,9 +101,9 @@ classdef Lab2_AssignmentAngie < handle
             % [Z,X] = meshgrid(z,x)
             % oneSideOfCube_h = surf(X,Y,Z);
             % cubePoints = [X(:),Y(:),Z(:)];
-            % 
+            %
             % cubeAtOigin_h = plot3(cubePoints(:,1),cubePoints(:,2),cubePoints(:,3));
-     
+
             % Mesh 2
             Y2 = ones(8,10)
             Y2 = Y2*0.1
@@ -135,14 +136,14 @@ classdef Lab2_AssignmentAngie < handle
             cubePoints4 = [X4(:),Y4(:),Z4(:)];
 
             cubeAtOigin_h4 = plot3(cubePoints4(:,1),cubePoints4(:,2),cubePoints4(:,3));
-          
-            
+
+
             parfor i = 1:size(endPos1, 1)
                 endPosition = endPos1(i, :);
                 hold = pickUps1(i, :);
                 self.robot1Rotato(endPosition, hold, self.robot1);
             end
-            
+
             parfor i = 1:size(endPos2, 1)
                 endPosition2 = endPos2(i,:);
                 hold2 = pickUps2(i,:);
@@ -154,16 +155,16 @@ classdef Lab2_AssignmentAngie < handle
 
         %% Movement of robot 1
         function robot1Rotato(self, endPosition, hold, robot1)
-            
+
             %% Check E-stop status before allowing movement
             if strcmp(self.estopStatus, 'Stop')
                 disp('E-stop is activated. Robot will not move.');
                 return; % Exit the function without moving
             end
-            
-           
+
+
             numSteps = 100;
-            
+
             endTransform = transl(hold) * trotx(pi)
             elbowAngles = deg2rad([0, 0, 45, 70, -35, 259, 0]);
             qEnd = self.robot1.model.ikcon(endTransform, elbowAngles);
@@ -192,7 +193,7 @@ classdef Lab2_AssignmentAngie < handle
         end
 
         function robot2Rotato(self, endPosition2, hold2, robot2)
-           
+
             % This method moves the robot and picks up items
             % Check E-stop status before allowing movement
             %{
@@ -202,7 +203,7 @@ classdef Lab2_AssignmentAngie < handle
             end
             %}
             numSteps = 100;
-            
+
             endTransform = transl(hold2) * trotx(pi);
             elbowAngles = deg2rad([0, -40, 50, -60, -90, 0]);
             qEnd = self.robot2.model.ikcon(endTransform, elbowAngles);
@@ -228,9 +229,11 @@ classdef Lab2_AssignmentAngie < handle
                     pause(0.01);
                 end
             end
-        end 
+        end
 
-          function beansCollider(self, endPosition, hold, robot1)
+        function beansCollider(self, endPosition, hold, robot1)
+
+            mdl_3link3d
 
             Y = ones(8,10)
             Y = Y*-0.45
@@ -239,24 +242,26 @@ classdef Lab2_AssignmentAngie < handle
             [Z,X] = meshgrid(z,x)
             oneSideOfCube_h = surf(X,Y,Z);
             cubePoints = [X(:),Y(:),Z(:)];
-     
+
             cubeAtOigin_h = plot3(cubePoints(:,1),cubePoints(:,2),cubePoints(:,3));
-     
-              q0 = transl(-1.4, -0.2, 1.29) * trotx(pi)
-              q02 = transl(-0.5, 1.5, 1.2) * trotx(pi)
-              q1 = self.robot1.model.ikcon(q0)
-              %q1 = endPosition
-              q2 = self.robot1.model.ikcon(q02)
-              self.robot1.model.animate(q1);
-              qWaypoints = [q1;q2];
-              isCollision = true;
-              checkedTillWaypoint = 1;
-              qMatrix = [];
-              while (isCollision)
-                  startWaypoint = checkedTillWaypoint;
-                  for i = startWaypoint:size(qWaypoints,1)-1
-                      qMatrixJoin = InterpolateWaypointRadians(qWaypoints(i:i+1,:),deg2rad(10));
-                      if ~IsCollision(robot1,qMatrixJoin,cubePoints)
+
+            q0 = transl(-1.4, -0.2, 1.29) * trotx(pi)
+            q02 = transl(-0.5, 1.5, 1.2) * trotx(pi)
+            q1 = self.robot1.model.ikcon(q0)
+            %q1 = endPosition
+            q2 = self.robot1.model.ikcon(q02)
+            self.robot1.model.animate(q1);
+            qWaypoints = [q1;q2];
+            isCollision = true;
+            checkedTillWaypoint = 1;
+            qMatrix = [];
+            while (isCollision)
+                startWaypoint = checkedTillWaypoint;
+                for i = startWaypoint:size(qWaypoints,1)-1
+                    a = qWaypoints(i:i+1,:)
+                    b = deg2rad(10)
+                    qMatrixJoin = self.InterpolateWaypointRadians(qWaypoints(i:i+1,:),deg2rad(10))
+                    if ~IsCollision(robot1,qMatrixJoin,cubePoints)
                         qMatrix = [qMatrix; qMatrixJoin]; %#ok<AGROW>
                         self.robot1.animate(qMatrixJoin);
                         size(qMatrix)
@@ -264,12 +269,12 @@ classdef Lab2_AssignmentAngie < handle
                         checkedTillWaypoint = i+1;
                         % Now try and join to the final goal (q2)
                         qMatrixJoin = InterpolateWaypointRadians([qMatrix(end,:); q2],deg2rad(10));
-                      if ~IsCollision(robot1,qMatrixJoin,cubePoints)
-                        qMatrix = [qMatrix;qMatrixJoin];
-                        % Reached goal without collision, so break out
-                        break;
-                      end
-                      else
+                        if ~IsCollision(robot1,qMatrixJoin,cubePoints)
+                            qMatrix = [qMatrix;qMatrixJoin];
+                            % Reached goal without collision, so break out
+                            break;
+                        end
+                    else
                         % Randomly pick a pose that is not in collision
                         qRand = (2 * rand(1,3) - 1) * pi;
                         while IsCollision(robot1,qRand,cubePoints)
@@ -278,93 +283,181 @@ classdef Lab2_AssignmentAngie < handle
                         qWaypoints =[ qWaypoints(1:i,:); qRand; qWaypoints(i+1:end,:)];
                         isCollision = true;
                         break;
-                      end
-                  end
+                    end
+                end
             end
-      self.robot1.animate(qMatrix)
-      keyboard
-          end
+            self.robot1.animate(qMatrix)
+            keyboard
+        end
+
+        function beansColliderfake()
+
+            Y = ones(8,10)
+            Y = Y*-0.45
+            z = 0:(1/12):0.75
+            x = -2:0.1:-1.3
+            [Z,X] = meshgrid(z,x)
+            oneSideOfCube_h = surf(X,Y,Z);
+            cubePoints = [X(:),Y(:),Z(:)];
+
+            cubeAtOigin_h = plot3(cubePoints(:,1),cubePoints(:,2),cubePoints(:,3));
+
+            L1 = Link('d',0,'a',1,'alpha',0,'qlim',[-pi pi])
+            L2 = Link('d',0,'a',1,'alpha',0,'qlim',[-pi pi])
+            L3 = Link('d',0,'a',1,'alpha',0,'qlim',[-pi pi])
+            robot = SerialLink([L1 L2 L3],'name','myRobot');
+
+            % New values for the ellipsoid (guessed these, need proper model to work out correctly)
+            centerPoint = [0,0,0];
+            radii = [1,0.5,0.5];
+            [X,Y,Z] = ellipsoid( centerPoint(1), centerPoint(2), centerPoint(3), radii(1), radii(2), radii(3) );
+            for i = 1:4
+                robot.points{i} = [X(:),Y(:),Z(:)];
+                warning off
+                robot.faces{i} = delaunay(robot.points{i});
+                warning on;
+            end
+
+            robot.plot3d([0,0,0]);
+            axis equal
+            camlight
+            % robot.teach
+            % keyboard
+
+            % 2.9
+            q = [0,0,0];
+
+            % UPDATE: fkine function now returns an SE3 object.
+            % To obtain the Transform Matrix, access the
+            % variable in the object 'T' with '.T'.
+            tr = robot.fkine(q).T;
+            cubePointsAndOnes = [inv(tr) * [cubePoints,ones(size(cubePoints,1),1)]']';
+            updatedCubePoints = cubePointsAndOnes(:,1:3)
+            algebraicDist = GetAlgebraicDist(updatedCubePoints, centerPoint, radii);
+            pointsInside = find(algebraicDist < 1);
+            disp(['2.9: There are now ', num2str(size(pointsInside,1)),' points inside']);
+
+            % 2.10
+            q = [0,0,0];
+            tr = zeros(4,4,robot.n+1);
+            tr(:,:,1) = robot.base;
+            L = robot.links;
+            for i = 1 : robot.n
+                tr(:,:,i+1) = tr(:,:,i) * trotz(q(i)) * transl(0,0,L(i).d) * transl(L(i).a,0,0) * trotx(L(i).alpha);
+            end
+
+            % Go through each ellipsoid
+            for i = 1: size(tr,3)
+                cubePointsAndOnes = [inv(tr(:,:,i)) * [cubePoints,ones(size(cubePoints,1),1)]']';
+                updatedCubePoints = cubePointsAndOnes(:,1:3);
+                algebraicDist = GetAlgebraicDist(updatedCubePoints, centerPoint, radii);
+                pointsInside = find(algebraicDist < 1);
+                disp(['2.10: There are ', num2str(size(pointsInside,1)),' points inside the ',num2str(i),'th ellipsoid']);
+            end
+        end
+
         %% IsCollision
         % This is based upon the output of questions 2.5 and 2.6
         % Given a robot model (robot), and trajectory (i.e. joint state vector) (qMatrix)
         % and triangle obstacles in the environment (faces,vertex,faceNormals)
         function result = IsCollision(robot1,qMatrix,cubePoints,returnOnceFound)
-        if nargin < 6
-            returnOnceFound = true;
-        end
-        result = false;
-        
-        for qIndex = 1:size(qMatrix,1)
-            % Get the transform of every joint (i.e. start and end of every link)
-            tr = GetLinkPoses(qMatrix(qIndex,:), robot1);
-        
-            % Go through each link and also each triangle face
-            for i = 1 : size(tr,3)-1    
-                for faceIndex = 1:size(faces,1)
-                    vertOnPlane = vertex(faces(faceIndex,1)',:);
-                    [intersectP,check] = LinePlaneIntersection(faceNormals(faceIndex,:),vertOnPlane,tr(1:3,4,i)',tr(1:3,4,i+1)'); 
-                    if check == 1 && IsIntersectionPointInsideTriangle(intersectP,vertex(faces(faceIndex,:)',:))
-                        plot3(intersectP(1),intersectP(2),intersectP(3),'g*');
-                        display('Intersection');
-                        result = true;
-                        if returnOnceFound
-                            return
+            if nargin < 6
+                returnOnceFound = true;
+            end
+            result = false;
+
+            for qIndex = 1:size(qMatrix,1)
+                % Get the transform of every joint (i.e. start and end of every link)
+                tr = GetLinkPoses(qMatrix(qIndex,:), robot1);
+
+                % Go through each link and also each triangle face
+                for i = 1 : size(tr,3)-1
+                    for faceIndex = 1:size(faces,1)
+                        vertOnPlane = vertex(faces(faceIndex,1)',:);
+                        [intersectP,check] = LinePlaneIntersection(faceNormals(faceIndex,:),vertOnPlane,tr(1:3,4,i)',tr(1:3,4,i+1)');
+                        if check == 1 && IsIntersectionPointInsideTriangle(intersectP,vertex(faces(faceIndex,:)',:))
+                            plot3(intersectP(1),intersectP(2),intersectP(3),'g*');
+                            display('Intersection');
+                            result = true;
+                            if returnOnceFound
+                                return
+                            end
                         end
                     end
-                end    
+                end
             end
-        end
         end
 
         %% InterpolateWaypointRadians
         % Given a set of waypoints, finely intepolate them
-        function qMatrix = InterpolateWaypointRadians(waypointRadians,maxStepRadians)
-        if nargin < 2
-            maxStepRadians = deg2rad(1);
-        end
-        
-        qMatrix = [];
-        for i = 1: size(waypointRadians,1)-1
-            qMatrix = [qMatrix ; FineInterpolation(waypointRadians(i,:),waypointRadians(i+1,:),maxStepRadians)]; %#ok<AGROW>
-        end
+        function qMatrix = InterpolateWaypointRadians(self, waypointRadians,maxStepRadians)
+            if nargin < 2
+                maxStepRadians = deg2rad(1);
+            end
+
+            qMatrix = [];
+            for i = 1: size(waypointRadians,1)-1
+                qMatrix = [qMatrix ; self.FineInterpolation(waypointRadians(i,:),waypointRadians(i+1,:),maxStepRadians)]; %#ok<AGROW>
+            end
         end
         %% GetLinkPoses
         % q - robot joint angles
         % robot -  seriallink robot model
         % transforms - list of transforms
         function [ transforms ] = GetLinkPoses(self, q, robot1)
-        
-        links = self.robot1.model.links;
-        transforms = zeros(4, 4, length(links) + 1);
-        transforms(:,:,1) = self.robot1.model.base;
-        
-        for i = 1:length(links)
-            L = links(1,i);
-            
-            current_transform = transforms(:,:, i);
-            
-            current_transform = current_transform * trotz(q(1,i) + L.offset) * ...
-            transl(0,0, L.d) * transl(L.a,0,0) * trotx(L.alpha);
-            transforms(:,:,i + 1) = current_transform;
-        end
+
+            links = self.robot1.model.links;
+            transforms = zeros(4, 4, length(links) + 1);
+            transforms(:,:,1) = self.robot1.model.base;
+
+            for i = 1:length(links)
+                L = links(1,i);
+
+                current_transform = transforms(:,:, i);
+
+                current_transform = current_transform * trotz(q(1,i) + L.offset) * ...
+                    transl(0,0, L.d) * transl(L.a,0,0) * trotx(L.alpha);
+                transforms(:,:,i + 1) = current_transform;
+            end
         end
 
         %% FineInterpolation
         % Use results from Q2.6 to keep calling jtraj until all step sizes are
         % smaller than a given max steps size
         function qMatrix = FineInterpolation(q1,q2,maxStepRadians)
-        if nargin < 3
-            maxStepRadians = deg2rad(1);
+            if nargin < 3
+                maxStepRadians = deg2rad(1);
+            end
+
+            steps = 2;
+            while ~isempty(find(maxStepRadians < abs(diff(jtraj(q1,q2,steps))),1))
+                steps = steps + 1;
+            end
+            qMatrix = jtraj(q1,q2,steps);
         end
-            
-        steps = 2;
-        while ~isempty(find(maxStepRadians < abs(diff(jtraj(q1,q2,steps))),1))
-            steps = steps + 1;
+
+        %% GetAlgebraicDist
+        % determine the algebraic distance given a set of points and the center
+        % point and radii of an elipsoid
+        % *Inputs:*
+        %
+        % _points_ (many*(2||3||6) double) x,y,z cartesian point
+        %
+        % _centerPoint_ (1 * 3 double) xc,yc,zc of an ellipsoid
+        %
+        % _radii_ (1 * 3 double) a,b,c of an ellipsoid
+        %
+        % *Returns:*
+        %
+        % _algebraicDist_ (many*1 double) algebraic distance for the ellipsoid
+
+        function algebraicDist = GetAlgebraicDist(points, centerPoint, radii)
+
+            algebraicDist = ((points(:,1)-centerPoint(1))/radii(1)).^2 ...
+                + ((points(:,2)-centerPoint(2))/radii(2)).^2 ...
+                + ((points(:,3)-centerPoint(3))/radii(3)).^2;
         end
-        qMatrix = jtraj(q1,q2,steps);
-        end
+
     end
 end
 
-
-          
