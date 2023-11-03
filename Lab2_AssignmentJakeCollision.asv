@@ -1,4 +1,4 @@
-classdef Lab2_AssignmentAngie < handle
+classdef Lab2_AssignmentJakeCollision < handle
 
     properties (Access = private)
         lab2GuiApp  % Instance of Lab2_GUI
@@ -16,7 +16,7 @@ classdef Lab2_AssignmentAngie < handle
 
     %% Constructor
     methods
-        function self = Lab2_AssignmentAngie
+        function self = Lab2_AssignmentJakeCollision
             clc
             clf
             % Create an instance of Lab2_GUI
@@ -460,4 +460,3 @@ classdef Lab2_AssignmentAngie < handle
 
     end
 end
-
