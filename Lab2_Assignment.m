@@ -26,7 +26,7 @@ classdef Lab2_Assignment < handle
             % Create an instance of Lab2_GUI
             % self.lab2GuiApp = Lab2_GUI();
             Environment_Lab2Angie();
-            self.initialiseRobots(-0.7,0,0);
+            self.initialiseRobots(-0.6,0,0);
             input("Press ENTER to start.");
             self.main();
         end
@@ -118,6 +118,7 @@ classdef Lab2_Assignment < handle
             elbowUp1 = deg2rad([0,90,45,120,45,-90,0]);
             elbowUp2 = deg2rad([0,-100,100,-180,-90,0]);
             q = [pi/2,0,-pi/4];
+            steps = 100;
             numSteps = 500;
             boxNum = 3;
             vertices = verticesArray(:,:,boxNum);
@@ -126,45 +127,50 @@ classdef Lab2_Assignment < handle
             x = boxPos(boxNum,1) + 0.18;
             y = boxPos(boxNum,2);
             z = boxPos(boxNum,3) + 0.035;
-            
+
             % - point in front of box position
             xF = x + 0.2;
             currentPos = self.robot1.model.getpos();
             endTrans = transl(xF, y, z) * troty(-pi/2);
             endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 0)
-            
+            self.UR10Move(self.robot1.model, currentPos, endPose, steps, q, vertices, boxes{boxNum}, 0)
+
             % - box position
             currentPos = self.robot1.model.getpos();
             endTrans = transl(x, y, z) * troty(-pi/2);
             endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 0)
+            self.UR10Move(self.robot1.model, currentPos, endPose, steps, q, vertices, boxes{boxNum}, 0)
             q = self.gripperOpenClose(0);
-            
+
             % - back out in front of position
             currentPos = self.robot1.model.getpos();
             endTrans = transl(xF, y, z) * troty(-pi/2);
             endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 1)
-            
+            self.UR10Move(self.robot1.model, currentPos, endPose, steps, q, vertices, boxes{boxNum}, 1)
+
             % - counter near Robo
             currentPos = self.robot1.model.getpos();
-            endTrans = transl(-0.2, 1.5, 1) * troty(pi/2);
+            endTrans = transl(-0.2, 1.5, 0.8) * troty(pi/2);
             endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 1)
+            self.UR10Move(self.robot1.model, currentPos, endPose, steps, q, vertices, boxes{boxNum}, 1)
             q = self.gripperOpenClose(1);
-            
+
             % - default pos
             currentPos = self.robot1.model.getpos();
             endTrans = transl(-0.5, 1, 1) * troty(pi/2);
             endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 0)
+            self.UR10Move(self.robot1.model, currentPos, endPose, steps, q, vertices, boxes{boxNum}, 0)
 
             % Robo Movements - RMRC
             currentPos2 = self.robot2.model.fkine(self.robot2.model.getpos()).T;
             endTrans2 = transl(-0.2, 1.5, 1);
             qMatrix = self.RMRC(self.robot2.model, currentPos2, endTrans2, elbowUp2);
             for r = 1:numSteps
+                pickUpPose = self.robot2.model.fkine(robot.getpos).T * transl(0,0,0.2) * troty(pi/2);
+                transformedVertices = [verts, ones(size(verts,1),1)] * pickUpPose';
+                set(boxes{boxNum}, 'Vertices', transformedVertices(:,1:3));
+                drawnow();
+
                 self.robot2.model.animate(qMatrix(r,:))
                 drawnow();
                 endEffPos = self.robot2.model.getpos();
