@@ -123,42 +123,42 @@ classdef Lab2_Assignment < handle
             vertices = verticesArray(:,:,boxNum);
 
             % LinearUR10 movements - no RMRC
-            % x = boxPos(boxNum,1) + 0.18;
-            % y = boxPos(boxNum,2);
-            % z = boxPos(boxNum,3) + 0.035;
-            % 
-            % % - point in front of box position
-            % xF = x + 0.2;
-            % currentPos = self.robot1.model.getpos();
-            % endTrans = transl(xF, y, z) * troty(-pi/2);
-            % endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            % self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 0)
-            % 
-            % % - box position
-            % currentPos = self.robot1.model.getpos();
-            % endTrans = transl(x, y, z) * troty(-pi/2);
-            % endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            % self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 0)
-            % q = self.gripperOpenClose(0);
-            % 
-            % % - back out in front of position
-            % currentPos = self.robot1.model.getpos();
-            % endTrans = transl(xF, y, z) * troty(-pi/2);
-            % endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            % self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 1)
-            % 
-            % % - counter near Robo
-            % currentPos = self.robot1.model.getpos();
-            % endTrans = transl(-0.2, 1.5, 1) * troty(pi/2);
-            % endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            % self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 1)
-            % q = self.gripperOpenClose(1);
-            % 
-            % % - default pos
-            % currentPos = self.robot1.model.getpos();
-            % endTrans = transl(-0.5, 1, 1) * troty(pi/2);
-            % endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            % self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 0)
+            x = boxPos(boxNum,1) + 0.18;
+            y = boxPos(boxNum,2);
+            z = boxPos(boxNum,3) + 0.035;
+            
+            % - point in front of box position
+            xF = x + 0.2;
+            currentPos = self.robot1.model.getpos();
+            endTrans = transl(xF, y, z) * troty(-pi/2);
+            endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
+            self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 0)
+            
+            % - box position
+            currentPos = self.robot1.model.getpos();
+            endTrans = transl(x, y, z) * troty(-pi/2);
+            endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
+            self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 0)
+            q = self.gripperOpenClose(0);
+            
+            % - back out in front of position
+            currentPos = self.robot1.model.getpos();
+            endTrans = transl(xF, y, z) * troty(-pi/2);
+            endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
+            self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 1)
+            
+            % - counter near Robo
+            currentPos = self.robot1.model.getpos();
+            endTrans = transl(-0.2, 1.5, 1) * troty(pi/2);
+            endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
+            self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 1)
+            q = self.gripperOpenClose(1);
+            
+            % - default pos
+            currentPos = self.robot1.model.getpos();
+            endTrans = transl(-0.5, 1, 1) * troty(pi/2);
+            endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
+            self.UR10Move(self.robot1.model, currentPos, endPose, numSteps, q, vertices, boxes{boxNum}, 0)
 
             % Robo Movements - RMRC
             currentPos2 = self.robot2.model.fkine(self.robot2.model.getpos()).T;
