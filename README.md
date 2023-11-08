@@ -1,4 +1,8 @@
 ## IR_LabAssignment2_DP_JN_AC
+Students:
+- Dyandra Prins
+- Angelyn Co
+- Jake Nockles
 
 # Basic Project Overview
 
