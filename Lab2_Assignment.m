@@ -15,6 +15,10 @@ classdef Lab2_Assignment < handle
         Claw1_2
         Claw2_1
         Claw2_2
+        environmentVertices
+        environmentFaces
+        environmentFaceNormals
+        detectCollision
     end
 
     %% Non-Static Methods
@@ -24,8 +28,8 @@ classdef Lab2_Assignment < handle
             clc
             clf
             % Create an instance of Lab2_GUI
-            % self.lab2GuiApp = Lab2_GUI();
-            Environment_Lab2Angie();
+            % self.lab2GuiApp = Lab2_GUI();;
+            [self.environmentVertices, self.environmentFaces, self.environmentFaceNormals] = Environment_Lab2Angie();
             self.initialiseRobots(-0.6,0,0);
             input("Press ENTER to start.");
             self.main();
@@ -51,7 +55,7 @@ classdef Lab2_Assignment < handle
             self.robot2 = Robo();
             startQ1 = deg2rad([0,90,45,120,45,-90,0]);
             self.robot1.model.animate(startQ1);
-            startQ2 = deg2rad([0,-65,100,-180,-90,0]);
+            startQ2 = deg2rad([0,-100,100,-180,-90,0]);
             self.robot2.model.animate(startQ2)
             self.clawAttach();
         end
@@ -94,6 +98,7 @@ classdef Lab2_Assignment < handle
                 for z = 0.2:0.28:0.48
                     boxes{i} = PlaceObject('box.ply');
                     vertices = get(boxes{i}, 'Vertices');
+                    faces = get(boxes{i}, 'Faces');
                     transformedVertices = [vertices,ones(size(vertices,1),1)] * transl(x,y,z)';
                     set(boxes{i}, 'Vertices', transformedVertices(:,1:3));
                     verticesArray(:,:,i) = vertices;
@@ -101,6 +106,14 @@ classdef Lab2_Assignment < handle
                     boxPos(i,2) = y;
                     boxPos(i,3) = z;
                     i = i+1;
+                    self.environmentVertices = cat(1,self.environmentVertices,vertices);
+                    self.environmentFaces = cat(1, self.environmentFaces,faces);
+                    for faceIndex = 1:size(faces,1)
+                        v1 = self.environmentVertices(self.environmentFaces(faceIndex,1)',:);
+                        v2 = self.environmentVertices(self.environmentFaces(faceIndex,2)',:);
+                        v3 = self.environmentVertices(self.environmentFaces(faceIndex,3)',:);
+                        self.environmentFaceNormals(end+1,:) = unit(cross(v2-v1,v3-v1));
+                    end
                 end
                 for z = 1.0:0.28:1.28
                     boxes{i} = PlaceObject('box.ply');
@@ -112,6 +125,14 @@ classdef Lab2_Assignment < handle
                     boxPos(i,2) = y;
                     boxPos(i,3) = z;
                     i = i+1;
+                    self.environmentVertices = cat(1,self.environmentVertices,vertices);
+                    self.environmentFaces = cat(1, self.environmentFaces,faces);
+                    for faceIndex = 1:size(faces,1)
+                        v1 = self.environmentVertices(self.environmentFaces(faceIndex,1)',:);
+                        v2 = self.environmentVertices(self.environmentFaces(faceIndex,2)',:);
+                        v3 = self.environmentVertices(self.environmentFaces(faceIndex,3)',:);
+                        self.environmentFaceNormals(end+1,:) = unit(cross(v2-v1,v3-v1));
+                    end
                 end
             end
             %--------------------------------------------------------------------------------------------%
@@ -120,7 +141,7 @@ classdef Lab2_Assignment < handle
             q = [pi/2,0,-pi/4];
             steps = 100;
             numSteps = 300;
-            boxNum = 5;
+            boxNum = 6;
             vertices = verticesArray(:,:,boxNum);
 
             % LinearUR10 movements - no RMRC
@@ -133,43 +154,43 @@ classdef Lab2_Assignment < handle
             currentPos = self.robot1.model.getpos();
             endTrans = transl(xF, y, z) * troty(-pi/2);
             endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            self.UR10Move(self.robot1.model, currentPos, endPose, steps, q, vertices, boxes{boxNum}, 0)
+            self.UR10Move(self.robot1.model, currentPos, endPose, steps, q, vertices, boxes{boxNum}, 0);
 
-            % - box position
+            % % - box position
             currentPos = self.robot1.model.getpos();
             endTrans = transl(x, y, z) * troty(-pi/2);
             endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            self.UR10Move(self.robot1.model, currentPos, endPose, steps, q, vertices, boxes{boxNum}, 0)
+            self.UR10Move(self.robot1.model, currentPos, endPose, steps, q, vertices, boxes{boxNum}, 0);
             q = self.gripperOpenClose(0);
 
             % - back out in front of position
             currentPos = self.robot1.model.getpos();
             endTrans = transl(xF, y, z) * troty(-pi/2);
             endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            self.UR10Move(self.robot1.model, currentPos, endPose, steps, q, vertices, boxes{boxNum}, 1)
+            self.UR10Move(self.robot1.model, currentPos, endPose, steps, q, vertices, boxes{boxNum}, 1);
 
             % - lift up
             currentPos = self.robot1.model.getpos();
             endTrans = transl(-0.5, 1, 1) * troty(pi/2);
             endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            self.UR10Move(self.robot1.model, currentPos, endPose, steps, q, vertices, boxes{boxNum}, 1)
+            self.UR10Move(self.robot1.model, currentPos, endPose, steps, q, vertices, boxes{boxNum}, 1);
 
             % - counter near Robo
             currentPos = self.robot1.model.getpos();
             endTrans = transl(-0.2, 1.5, 0.8) * troty(pi/2);
             endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            self.UR10Move(self.robot1.model, currentPos, endPose, steps, q, vertices, boxes{boxNum}, 1)
+            self.UR10Move(self.robot1.model, currentPos, endPose, steps, q, vertices, boxes{boxNum}, 1);
             q = self.gripperOpenClose(1);
 
             % - default pos
             currentPos = self.robot1.model.getpos();
             endTrans = transl(-0.5, 1, 1) * troty(pi/2);
             endPose = self.robot1.model.ikcon(endTrans, elbowUp1);
-            self.UR10Move(self.robot1.model, currentPos, endPose, steps, q, vertices, boxes{boxNum}, 0)
+            self.UR10Move(self.robot1.model, currentPos, endPose, steps, q, vertices, boxes{boxNum}, 0);
 
             % Robo Movements - RMRC
             currentPos2 = self.robot2.model.fkine(self.robot2.model.getpos()).T;
-            endTrans2 = transl(0, 1.5, 1) * trotz(pi/2);
+            endTrans2 = transl(-0.2, 1.5, 1);
             qMatrix = self.RMRC(self.robot2.model, currentPos2, endTrans2, elbowUp2);
             for r = 1:numSteps
                 self.robot2.model.animate(qMatrix(r,:))
@@ -186,14 +207,9 @@ classdef Lab2_Assignment < handle
 
             currentPos2 = self.robot2.model.fkine(self.robot2.model.getpos()).T;
             endTrans2 = transl(0.2, 1, 1);
-            qMatrix = self.RMRC(self.robot2.model, currentPos2, endTrans2, elbowUp2);
+            qMatrix2 = self.RMRC(self.robot2.model, currentPos2, endTrans2, elbowUp2);
             for r = 1:numSteps
-                pickUpPose = self.robot2.model.fkine(self.robot2.model.getpos).T * transl(0,0,0.022);
-                transformedVertices = [vertices, ones(size(vertices,1),1)] * pickUpPose';
-                set(boxes{boxNum}, 'Vertices', transformedVertices(:,1:3));
-                drawnow();
-
-                self.robot2.model.animate(qMatrix(r,:))
+                self.robot2.model.animate(qMatrix2(r,:))
                 drawnow();
                 endEffPos = self.robot2.model.getpos();
                 self.Claw2_1.model.base = self.robot2.model.fkine(endEffPos).T;
@@ -222,6 +238,9 @@ classdef Lab2_Assignment < handle
         end
 
         function UR10Move(self, robot, currentPos, endPose, numSteps, q, vertices, boxId, box)
+            eVerts = self.environmentVertices;
+            eFaces = self.environmentFaces;
+            eFaceNorms = self.environmentFaceNormals;
             robot1Trajectory = jtraj(currentPos, endPose, numSteps);
             verts = vertices;
             for x = 1:numSteps
@@ -231,6 +250,7 @@ classdef Lab2_Assignment < handle
                     set(boxId, 'Vertices', transformedVertices(:,1:3));
                     drawnow();
                 end
+                % collision = IsCollision(robot,robot1Trajectory(x,:),eFaces,eVerts,eFaceNorms,false)
                 robot.animate(robot1Trajectory(x,:));
                 drawnow();
                 endEffPos = robot.getpos();
@@ -241,7 +261,6 @@ classdef Lab2_Assignment < handle
                 self.Claw1_2.model.animate(q);
                 drawnow();
             end
-            disp("Robot arm positioned.");
         end
         function qMatrix = RMRC(self, robot, currentPos, endPose, elbowUp)
             t = 10;             % Total time (s)
@@ -261,17 +280,17 @@ classdef Lab2_Assignment < handle
                 x(1,i) = (1-s(i))*currentPos(1,4) + s(i)*endPose(1,4);                  % Points in x
                 x(2,i) = (1-s(i))*currentPos(2,4) + s(i)*endPose(2,4);                  % Points in y
                 x(3,i) = (1-s(i))*currentPos(3,4) + s(i)*endPose(3,4);                  % Points in z
-                theta(1,i) = 0;                                       % Roll angle
-                theta(2,i) = 0;                 % Pitch angle
-                theta(3,i) = 0;                                       % Yaw angle
+                theta(1,i) = pi;                                                        % Roll angle
+                theta(2,i) = 0;                                                         % Pitch angle
+                theta(3,i) = 0;                                                         % Yaw angle
             end
 
-            T = currentPos;          % Create transformation of first point and angle
+            T = currentPos;                                                             % Create transformation of first point and angle
             qMatrix(1,:) = robot.ikcon(T,elbowUp);                                      % Solve joint angles to achieve first waypoint
 
             for i = 1:steps-1
                 T = robot.fkine(qMatrix(i,:)).T;                                        % Get forward transformation at current joint state
-                deltaX = x(:,i+1) - T(1:3,4);   
+                deltaX = x(:,i+1) - T(1:3,4);
                 Rd = rpy2r(theta(1,i+1),theta(2,i+1),theta(3,i+1));                     % Get next RPY angles, convert to rotation matrix
                 Ra = T(1:3,1:3);                                                        % Current end-effector rotation matrix
                 Rdot = (1/deltaT)*(Rd - Ra);                                            % Calculate rotation matrix error
@@ -332,14 +351,89 @@ classdef Lab2_Assignment < handle
                 drawnow();
             end
         end
+        % Collision Detection function
+        % function result = CollisionDetection(robot, qMatrix, vertices, faces, faceNormals)
+        % 
+        %     tr = zeros(4,4,7); % 6 links + 1
+        %     tr(:,:,1) = robot.base;
+        %     L = robot.links;
+        %     for i = 1 : 6
+        %         tr(:,:,i+1) = tr(:,:,i) * trotz(qMatrix(i)+L(i).offset) * transl(0,0,L(i).d) * transl(L(i).a,0,0) * trotx(L(i).alpha);
+        %     end
+        % 
+        %     result = IsCollision(robot,qMatrix,faces,vertices,faceNormals,false);
+        % end
+
+        %% IsIntersectionPointInsideTriangle
+        % Given a point which is known to be on the same plane as the triangle
+        % determine if the point is
+        % inside (result == 1) or
+        % outside a triangle (result ==0 )
+        function result = IsIntersectionPointInsideTriangle(intersectP,triangleVerts)
+
+            u = triangleVerts(2,:) - triangleVerts(1,:);
+            v = triangleVerts(3,:) - triangleVerts(1,:);
+
+            uu = dot(u,u);
+            uv = dot(u,v);
+            vv = dot(v,v);
+
+            w = intersectP - triangleVerts(1,:);
+            wu = dot(w,u);
+            wv = dot(w,v);
+
+            D = uv * uv - uu * vv;
+
+            % Get and test parametric coords (s and t)
+            s = (uv * wv - vv * wu) / D;
+            if (s < 0.0 || s > 1.0)        % intersectP is outside Triangle
+                result = 0;
+                return;
+            end
+
+            t = (uv * wu - uu * wv) / D;
+            if (t < 0.0 || (s + t) > 1.0)  % intersectP is outside Triangle
+                result = 0;
+                return;
+            end
+
+            result = 1;                      % intersectP is in Triangle
+        end
+
+        %% IsCollision
+        % This is based upon the output of questions 2.5 and 2.6
+        % Given a robot model (robot), and trajectory (i.e. joint state vector) (qMatrix)
+        % and triangle obstacles in the environment (faces,vertex,faceNormals)
+        function result = IsCollision(robot,qMatrix,faces,vertex,faceNormals,returnOnceFound)
+            if nargin < 6
+                returnOnceFound = true;
+            end
+            result = false;
+
+            for qIndex = 1:size(qMatrix,1)
+                % Get the transform of every joint (i.e. start and end of every link)
+                tr = zeros(4,4,7); % 6 links + 1
+                tr(:,:,1) = robot.base;
+                L = robot.links;
+                for i = 1 : 6
+                    tr(:,:,i+1) = tr(:,:,i) * trotz(qMatrix(i)+L(i).offset) * transl(0,0,L(i).d) * transl(L(i).a,0,0) * trotx(L(i).alpha);
+                end
+
+                % Go through each link and also each triangle face
+                for i = 1 : size(tr,3)-1
+                    for faceIndex = 1:size(faces,1)
+                        vertOnPlane = vertex(faces(faceIndex,1)',:);
+                        [intersectP,check] = LinePlaneIntersection(faceNormals(faceIndex,:),vertOnPlane,tr(1:3,4,i)',tr(1:3,4,i+1)');
+                        if check == 1 && IsIntersectionPointInsideTriangle(intersectP,vertex(faces(faceIndex,:)',:))
+                            disp('Intersection');
+                            result = true;
+                            if returnOnceFound
+                                return
+                            end
+                        end
+                    end
+                end
+            end
+        end
     end
-
-    %{
-       function collisionDetected = IsCollisionWithEnvironment(currentTransform, environmentObjects)
-           % Check for collisions between robot and environment objects
-           % Implement your collision detection logic here
-           collisionDetected = false; % Update this based on collision checking
-       end        
-    %}
-
 end
