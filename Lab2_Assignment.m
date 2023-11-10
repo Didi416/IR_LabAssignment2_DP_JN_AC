@@ -30,7 +30,7 @@ classdef Lab2_Assignment < handle
             % Create an instance of Lab2_GUI
             % self.lab2GuiApp = Lab2_GUI();;
             [self.environmentVertices, self.environmentFaces, self.environmentFaceNormals] = Environment_Lab2Angie();
-            self.initialiseRobots(-0.6,0,0);
+            self.initialiseRobots(-0.5,0,0);
             input("Press ENTER to start.");
             self.main();
         end
@@ -96,17 +96,17 @@ classdef Lab2_Assignment < handle
 
             for y = -0.2:0.6:1.0
                 for z = 0.2:0.28:0.48
-                    boxes{i} = PlaceObject('box.ply');
+                    boxes{i} = PlaceObject('box.ply');                                              % Place boxes in positions
                     vertices = get(boxes{i}, 'Vertices');
                     faces = get(boxes{i}, 'Faces');
-                    transformedVertices = [vertices,ones(size(vertices,1),1)] * transl(x,y,z)';
+                    transformedVertices = [vertices,ones(size(vertices,1),1)] * transl(x,y,z)';     % use vertices to transform them to the desired position
                     set(boxes{i}, 'Vertices', transformedVertices(:,1:3));
-                    verticesArray(:,:,i) = vertices;
+                    verticesArray(:,:,i) = vertices;                                                % Store vertices in 3D array to access later
                     boxPos(i,1) = x;
                     boxPos(i,2) = y;
                     boxPos(i,3) = z;
                     i = i+1;
-                    self.environmentVertices = cat(1,self.environmentVertices,vertices);
+                    self.environmentVertices = cat(1,self.environmentVertices,vertices);            % add vertices and faces of boxes for collision detection
                     self.environmentFaces = cat(1, self.environmentFaces,faces);
                     for faceIndex = 1:size(faces,1)
                         v1 = self.environmentVertices(self.environmentFaces(faceIndex,1)',:);
@@ -136,9 +136,10 @@ classdef Lab2_Assignment < handle
                 end
             end
             %--------------------------------------------------------------------------------------------%
-            elbowUp1 = deg2rad([0,90,45,120,45,-90,0]);
-            elbowUp2 = deg2rad([0,-100,100,-180,-90,0]);
+            elbowUp1 = deg2rad([0,90,45,120,45,-90,0]);                                             % Initial guess positions for UR10 (ikcon)
+            elbowUp2 = deg2rad([0,-100,100,-180,-90,0]);                                            % Initial guess position for Robo (ikcon)
             q = [pi/2,0,-pi/4];
+            % Setup for moving robots with either RMRC or IK
             steps = 100;
             numSteps = 300;
             boxNum = 6;
@@ -190,7 +191,7 @@ classdef Lab2_Assignment < handle
 
             % Robo Movements - RMRC
             currentPos2 = self.robot2.model.fkine(self.robot2.model.getpos()).T;
-            endTrans2 = transl(-0.2, 1.5, 1);
+            endTrans2 = transl(0, 1.5, 1);
             qMatrix = self.RMRC(self.robot2.model, currentPos2, endTrans2, elbowUp2);
             for r = 1:numSteps
                 self.robot2.model.animate(qMatrix(r,:))
@@ -209,6 +210,11 @@ classdef Lab2_Assignment < handle
             endTrans2 = transl(0.2, 1, 1);
             qMatrix2 = self.RMRC(self.robot2.model, currentPos2, endTrans2, elbowUp2);
             for r = 1:numSteps
+                pickUpPose = self.robot2.model.fkine(self.robot2.model.getpos).T * transl(0,0,0.02);
+                transformedVertices = [vertices, ones(size(vertices,1),1)] * pickUpPose';
+                set(boxes{boxNum}, 'Vertices', transformedVertices(:,1:3));
+                drawnow();
+
                 self.robot2.model.animate(qMatrix2(r,:))
                 drawnow();
                 endEffPos = self.robot2.model.getpos();
@@ -253,6 +259,7 @@ classdef Lab2_Assignment < handle
                 % collision = IsCollision(robot,robot1Trajectory(x,:),eFaces,eVerts,eFaceNorms,false)
                 robot.animate(robot1Trajectory(x,:));
                 drawnow();
+                % Move gripper with end effector at each step
                 endEffPos = robot.getpos();
                 self.Claw1_1.model.base = robot.fkine(endEffPos).T * transl(0,0,0.09);
                 self.Claw1_1.model.animate(q);
@@ -263,9 +270,9 @@ classdef Lab2_Assignment < handle
             end
         end
         function qMatrix = RMRC(self, robot, currentPos, endPose, elbowUp)
-            t = 10;             % Total time (s)
+            t = 10;             
             deltaT = 0.02;      % Control frequency
-            steps = 300;   % No. of steps for simulation
+            steps = 300;
             epsilon = 0.5;      % Threshold value for manipulability/Damped Least Squares
             W = diag([1 1 1 0.1 0.1 0.1]);    % Weighting matrix for the velocity vector
 
@@ -294,7 +301,7 @@ classdef Lab2_Assignment < handle
                 Rd = rpy2r(theta(1,i+1),theta(2,i+1),theta(3,i+1));                     % Get next RPY angles, convert to rotation matrix
                 Ra = T(1:3,1:3);                                                        % Current end-effector rotation matrix
                 Rdot = (1/deltaT)*(Rd - Ra);                                            % Calculate rotation matrix error
-                S = Rdot*Ra';                                                           % Skew symmetric!
+                S = Rdot*Ra';                                                           
                 linear_velocity = (1/deltaT)*deltaX;
                 angular_velocity = [S(3,2);S(1,3);S(2,1)];                              % Check the structure of Skew Symmetric matrix!!
                 % deltaTheta = tr2rpy(Rd*Ra');                                          % Convert rotation matrix to RPY angles
@@ -307,7 +314,7 @@ classdef Lab2_Assignment < handle
                     lambda = 0;
                 end
                 invJ = inv(J'*J + lambda *eye(6))*J';                                   % DLS Inverse
-                qdot(i,:) = (invJ*xdot)';                                               % Solve the RMRC equation (you may need to transpose the         vector)
+                qdot(i,:) = (invJ*xdot)';                                               % Solve the RMRC equation, Jacobian relates joint velocities to end effector velocities
                 for j = 1:6                                                             % Loop through joints 1 to 6
                     if qMatrix(i,j) + deltaT*qdot(i,j) < robot.qlim(j,1)                 % If next joint angle is lower than joint limit...
                         qdot(i,j) = 0; % Stop the motor
@@ -351,18 +358,6 @@ classdef Lab2_Assignment < handle
                 drawnow();
             end
         end
-        % Collision Detection function
-        % function result = CollisionDetection(robot, qMatrix, vertices, faces, faceNormals)
-        % 
-        %     tr = zeros(4,4,7); % 6 links + 1
-        %     tr(:,:,1) = robot.base;
-        %     L = robot.links;
-        %     for i = 1 : 6
-        %         tr(:,:,i+1) = tr(:,:,i) * trotz(qMatrix(i)+L(i).offset) * transl(0,0,L(i).d) * transl(L(i).a,0,0) * trotx(L(i).alpha);
-        %     end
-        % 
-        %     result = IsCollision(robot,qMatrix,faces,vertices,faceNormals,false);
-        % end
 
         %% IsIntersectionPointInsideTriangle
         % Given a point which is known to be on the same plane as the triangle
