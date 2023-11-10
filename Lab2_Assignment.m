@@ -29,7 +29,7 @@ classdef Lab2_Assignment < handle
             clf
             % Create an instance of Lab2_GUI
             % self.lab2GuiApp = Lab2_GUI();;
-            [self.environmentVertices, self.environmentFaces, self.environmentFaceNormals] = Environment_Lab2Angie();
+            [self.environmentVertices, self.environmentFaces, self.environmentFaceNormals] = Environment_Lab2();
             self.initialiseRobots(-0.5,0,0);
             input("Press ENTER to start.");
             self.main();
@@ -396,9 +396,6 @@ classdef Lab2_Assignment < handle
         end
 
         %% IsCollision
-        % This is based upon the output of questions 2.5 and 2.6
-        % Given a robot model (robot), and trajectory (i.e. joint state vector) (qMatrix)
-        % and triangle obstacles in the environment (faces,vertex,faceNormals)
         function result = IsCollision(robot,qMatrix,faces,vertex,faceNormals,returnOnceFound)
             if nargin < 6
                 returnOnceFound = true;
