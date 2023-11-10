@@ -26,8 +26,6 @@ classdef TheClaww < RobotBaseClass
             %link(2) = Link('d',-0.043,'a',-0.035,'alpha',0,'qlim', deg2rad([-360 360]), 'offset',pi);
       
             self.model = SerialLink(link,'name',self.name);
-          
-            self.model.teach()
         end 
     end
 end
